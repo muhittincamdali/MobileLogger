@@ -8,30 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- CloudKit destination for synced logging
+- visionOS navigation support
 
-## [1.0.0] - 2025-01-15
+## [1.0.0] - 2024-01-15
 
 ### Added
-- Six log levels (trace, debug, info, warning, error, critical)
-- ConsoleDestination with colored output
-- FileDestination with rotation support
-- OSLogDestination for Apple unified logging
-- RemoteDestination for HTTP log shipping
-- JSONFormatter for structured output
-- PrettyFormatter for human-readable logs
-- PrivacyRedactor for PII masking
-- @Sensitive property wrapper
-- PerformanceTracker for execution timing
-- CrashReporter for exception/signal handling
-- Thread-safe logging with serial queue
-- Zero external dependencies
+- Type-safe navigation with compile-time checks
+- SwiftUI NavigationStack integration
+- Deep linking support with URL parsing
+- Tab bar coordination
+- Modal presentation handling
+- Navigation state persistence
+- Route parameters with type safety
+- Navigation interceptors (guards)
+- Animated transitions
+- Back stack management
+- Child router support (coordinator pattern)
 
-### Changed
-- Optimized batch processing for remote destination
+### Features
+- Zero dependencies
+- Protocol-oriented design
+- Full async/await support
 
-### Fixed
-- File rotation edge cases
-
-[Unreleased]: https://github.com/muhittincamdali/MobileLogger/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/muhittincamdali/MobileLogger/releases/tag/v1.0.0
+[Unreleased]: https://github.com/muhittincamdali/SwiftRouter/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/muhittincamdali/SwiftRouter/releases/tag/v1.0.0

@@ -9,56 +9,45 @@
 
 ## Reporting a Vulnerability
 
-We take security seriously. As a logging library, we handle potentially sensitive data.
+We take the security of SwiftRouter seriously. If you have discovered a security vulnerability, we appreciate your help in disclosing it to us in a responsible manner.
 
 ### How to Report
 
-1. **Do NOT** open a public issue
-2. Email details to the repository owner
-3. Include:
-   - Description of the vulnerability
-   - Steps to reproduce
-   - Potential impact
-   - Suggested fix (if any)
+**Please do not report security vulnerabilities through public GitHub issues.**
+
+Instead, please report them via email to the repository owner. You can find contact information on the GitHub profile.
+
+Please include the following information:
+
+- Type of issue (e.g., deep link injection, state manipulation, etc.)
+- Full paths of source file(s) related to the manifestation of the issue
+- The location of the affected source code (tag/branch/commit or direct URL)
+- Any special configuration required to reproduce the issue
+- Step-by-step instructions to reproduce the issue
+- Proof-of-concept or exploit code (if possible)
+- Impact of the issue, including how an attacker might exploit it
 
 ### What to Expect
 
-- **Acknowledgment**: Within 48 hours
-- **Initial Assessment**: Within 7 days
-- **Resolution Timeline**: Depends on severity
-  - Critical: 24-48 hours
-  - High: 7 days
-  - Medium: 30 days
-  - Low: 90 days
-
-### Disclosure Policy
-
-- We follow responsible disclosure
-- Credit will be given to reporters (unless anonymity is requested)
-- Please allow reasonable time for fixes before public disclosure
-
-## Security Features
-
-This library includes security features:
-
-1. **PrivacyRedactor** - Automatically masks PII (emails, phones, IPs)
-2. **@Sensitive** - Property wrapper for sensitive fields
-3. **No external dependencies** - Reduced attack surface
+- A confirmation of receipt within 48 hours
+- An assessment of the vulnerability within 7 days
+- Regular updates on our progress
+- Credit for responsible disclosure (if desired)
 
 ## Security Best Practices
 
-When using this library:
+When using SwiftRouter in your projects:
 
-1. **Enable PrivacyRedactor** on external destinations
-2. **Review log output** before enabling remote logging
-3. **Secure remote endpoints** with HTTPS and authentication
-4. **Rotate log files** to prevent disk exhaustion
-5. **Don't log credentials** even in debug mode
+1. **Validate Deep Links** - Always validate URL parameters before navigation
+2. **Use Route Guards** - Implement authentication guards for protected routes
+3. **Sanitize Parameters** - Never trust user input from URL parameters
+4. **Audit Navigation Paths** - Review which screens are accessible via deep links
 
-## Contact
+## Security Features
 
-For security concerns, contact the maintainer through GitHub.
+SwiftRouter includes several security considerations:
 
----
-
-Thank you for helping keep this project secure! 🔒
+- **Type-Safe Parameters** - Reduces injection risks
+- **Route Guards** - Authentication/authorization interceptors
+- **URL Validation** - Built-in URL parsing with validation
+- **No External Dependencies** - Minimal attack surface
