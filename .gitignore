@@ -2,57 +2,44 @@
 *.xcodeproj/*
 !*.xcodeproj/project.pbxproj
 !*.xcodeproj/xcshareddata/
-!*.xcodeproj/project.xcworkspace/
-*.xcworkspace/*
 !*.xcworkspace/contents.xcworkspacedata
-!*.xcworkspace/xcshareddata/
-xcuserdata/
-*.xccheckout
-*.moved-aside
-*.xcuserstate
-*.xcscmblueprint
-*.xcscheme
+/*.gcno
+**/xcshareddata/WorkspaceSettings.xcsettings
 
 # Build
 build/
 DerivedData/
-*.hmap
+*.moved-aside
 *.ipa
 *.dSYM.zip
 *.dSYM
 
 # Swift Package Manager
 .build/
+.swiftpm/
 Packages/
-Package.pins
 Package.resolved
-*.workspace
 
 # CocoaPods
 Pods/
 
 # Carthage
 Carthage/Build/
-Carthage/Checkouts/
-
-# Accio
-Dependencies/
 
 # fastlane
 fastlane/report.xml
 fastlane/Preview.html
-fastlane/screenshots/**/*.png
+fastlane/screenshots
 fastlane/test_output
 
-# OS
+# macOS
 .DS_Store
 *.swp
-*~
-._*
-.Spotlight-V100
-.Trashes
+*~.nib
+*.pbxuser
+!default.pbxuser
 
 # IDE
-.idea/
-*.swiftpm
-.vscode/
+*.xcuserstate
+*.xcscmblueprint
+*.idea/
