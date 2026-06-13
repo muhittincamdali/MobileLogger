@@ -1,5 +1,4 @@
 // swift-tools-version: 5.9
-
 import PackageDescription
 
 let package = Package(
@@ -11,20 +10,19 @@ let package = Package(
         .watchOS(.v8)
     ],
     products: [
-        .library(
-            name: "MobileLogger",
-            targets: ["MobileLogger"]
-        )
+        .library(name: "MobileLogger", targets: ["MobileLogger"]),
     ],
     targets: [
         .target(
             name: "MobileLogger",
-            path: "Sources/MobileLogger"
+            path: "Sources/MobileLogger",
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
         ),
         .testTarget(
             name: "MobileLoggerTests",
-            dependencies: ["MobileLogger"],
-            path: "Tests/MobileLoggerTests"
+            dependencies: ["MobileLogger"]
         )
     ]
 )
