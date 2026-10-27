@@ -1,28 +1,37 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.2
 import PackageDescription
 
 let package = Package(
     name: "MobileLogger",
     platforms: [
-        .iOS(.v15),
-        .macOS(.v13),
-        .tvOS(.v15),
-        .watchOS(.v8)
+        .iOS(.v18),
+        .macOS(.v15),
+        .tvOS(.v18),
+        .watchOS(.v11),
+        .visionOS(.v2)
     ],
     products: [
-        .library(name: "MobileLogger", targets: ["MobileLogger"]),
+        .library(name: "MobileLogger", targets: ["MobileLogger"])
+    ],
+    dependencies: [
+        // The redactor of the shared redaction spec (REDACTION-SPEC 2.1, implementation "S").
+        .package(url: "https://github.com/muhittincamdali/iOSSecurityTools.git", from: "2.1.2")
     ],
     targets: [
         .target(
             name: "MobileLogger",
-            path: "Sources/MobileLogger",
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
-            ]
+            dependencies: [
+                .product(name: "iOSSecurityTools", package: "iOSSecurityTools")
+            ],
+            path: "Sources/MobileLogger"
         ),
         .testTarget(
             name: "MobileLoggerTests",
-            dependencies: ["MobileLogger"]
+            dependencies: [
+                "MobileLogger",
+                .product(name: "iOSSecurityTools", package: "iOSSecurityTools")
+            ],
+            path: "Tests/MobileLoggerTests"
         )
     ]
 )
