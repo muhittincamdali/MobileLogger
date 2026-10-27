@@ -40,9 +40,9 @@ and redacts the logs of packages that use swift-log too.
 - **Checked against the spec** — the spec's required test set and its corpus of 7,866
   adversarial inputs run through the logger's own entry points; the output must equal the
   reference redactor's for every input, and the export must not add what it hides.
-- **Fail-closed limits** — oversized messages, metadata nested more than 64 levels or larger
-  than 256 KiB, and over-long URLs are hidden whole instead of half read; NaN, infinity and
-  `Int.min` never trap.
+- **Fail-closed limits** — oversized messages, metadata nested more than 64 levels, larger
+  than 256 KiB or holding more than 256 KiB of URLs and bodies, and over-long URLs are hidden
+  whole instead of half read; NaN, infinity and `Int.min` never trap.
 - **Bounded stores** — `MemoryLogStore` keeps the newest records within a count and a byte
   budget, `FileLogStore` rotates a fixed number of JSON Lines files, and both count what they
   drop instead of growing.

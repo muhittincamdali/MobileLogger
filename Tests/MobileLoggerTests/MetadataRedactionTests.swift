@@ -120,6 +120,37 @@ struct MetadataRedactionTests {
         #expect(small.omittedMetadata == nil)
     }
 
+    @Test("URLs and bodies count toward the metadata limit with their full size, not their text's")
+    func urlAndBodySizes() throws {
+        let policy = RedactionPolicy(maximumBodySize: 1_024)
+        // An XML body is omitted as a short note, but it is still 600 bytes of metadata.
+        let xml = LogValue.body(Data(repeating: UInt8(ascii: "a"), count: 600), contentType: "application/xml")
+        #expect(record(metadata: ["b0": xml], policy: policy).omittedMetadata == nil)
+        let two = record(metadata: ["b0": xml, "b1": xml], policy: policy)
+        #expect(two.metadata.isEmpty)
+        #expect(two.omittedMetadata == RecordRedactor.MetadataFailure.tooLarge.note)
+
+        let url = try #require(URL(string: "https://example.com/" + String(repeating: "a", count: 600)))
+        let urls = record(metadata: ["u0": .url(url), "u1": .url(url)], policy: policy)
+        #expect(urls.omittedMetadata == RecordRedactor.MetadataFailure.tooLarge.note)
+
+        // A body past the limit is not read; its note is all it adds.
+        let large = record(metadata: ["big": .body(Data(count: 2_000), contentType: "application/json"), "id": 1], policy: policy)
+        #expect(large.metadata["big"]?.stringValue?.hasPrefix("[body omitted: 2000 bytes") == true)
+        #expect(large.metadata["id"] == .int(1))
+    }
+
+    @Test("Many bodies under the default limit are omitted together and keep a store within its budget")
+    func manyBodies() {
+        let body = LogValue.body(Data(repeating: UInt8(ascii: "a"), count: 200_000), contentType: "application/xml")
+        let many = record(metadata: Dictionary(uniqueKeysWithValues: (0..<40).map { ("b\($0)", body) }))
+        #expect(many.metadata.isEmpty)
+        #expect(many.omittedMetadata == RecordRedactor.MetadataFailure.tooLarge.note)
+        let store = MemoryLogStore(maximumBytes: 1_048_576)
+        store.write(many)
+        #expect(store.byteCount < 1_024)
+    }
+
     @Test("A URL longer than the body limit is hidden whole")
     func longURL() {
         let policy = RedactionPolicy(maximumBodySize: 1_024)

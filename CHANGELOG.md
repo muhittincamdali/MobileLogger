@@ -48,8 +48,9 @@ removed; nothing of it is kept.
 ### Security
 
 - Limits fail closed: a message over 64 KiB is hidden unread; metadata nested more than 64
-  levels or larger than the body limit is omitted before it is copied; a URL longer than the
-  body limit is hidden whole; stores drop and count records instead of growing.
+  levels, larger than the body limit, or holding more than the body limit of URLs and bodies
+  (counted at full size) is omitted before it is copied or read; a URL longer than the body
+  limit is hidden whole; stores drop and count records instead of growing.
 - NaN and infinity in metadata are written as strings instead of raising in
   `JSONSerialization`, and integers of 13 digits or more, including `Int.min`, are written as
   strings so the card number detector reads them.

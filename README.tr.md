@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
+<!-- i18n-source: README.md@8c833a0657592da40b88fd09c24a13d1f4fc5d7c status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -31,7 +31,7 @@ MobileLogger, iOS, macOS, tvOS, watchOS ve visionOS uygulamaları için yapılan
 
 - **Her yolda maskeleme** — mesajlar, metadata anahtarları ve değerleri, URL'ler ve HTTP gövdeleri, maskeleme spesifikasyonunun referans uygulaması olan [iOSSecurityTools](https://github.com/muhittincamdali/iOSSecurityTools) içindeki `SensitiveDataRedactor`'dan geçer: gizli anahtar adları, kart numaraları (Luhn), IBAN'lar (mod-97), e-posta adresleri, JSON Web Token'lar, bearer ve uzun token'lar.
 - **Spesifikasyona göre doğrulanır** — spesifikasyonun zorunlu test seti ve 7.866 adversarial girdiden oluşan korpusu, logger'ın kendi giriş noktalarından geçirilir; çıktı her girdi için referans maskeleyicinin çıktısına eşit olmalıdır ve dışa aktarım gizlenen şeyi geri eklememelidir.
-- **Fail-closed sınırlar** — aşırı büyük mesajlar, 64 düzeyden fazla iç içe geçmiş veya 256 KiB'tan büyük metadata ve aşırı uzun URL'ler yarım okunmak yerine tamamen gizlenir; NaN, sonsuz ve `Int.min` değerleri asla trap'e yol açmaz.
+- **Fail-closed sınırlar** — aşırı büyük mesajlar, 64 düzeyden fazla iç içe geçmiş, 256 KiB'tan büyük ya da toplamda 256 KiB'tan fazla URL ve gövde içeren metadata ve aşırı uzun URL'ler yarım okunmak yerine tamamen gizlenir; NaN, sonsuz ve `Int.min` değerleri asla trap'e yol açmaz.
 - **Sınırlı depolar** — `MemoryLogStore` en yeni kayıtları bir kayıt sayısı ve bayt bütçesi içinde tutar, `FileLogStore` sabit sayıda JSON Lines dosyasını döndürür (rotate eder) ve ikisi de büyümek yerine attıkları kayıtları sayar.
 - **Paylaşıma hazır dışa aktarım** — `LogArchive`, seviyeye ve tarihe göre filtrelenmiş JSON Lines veya metin yazar ve `ShareLink` için `Transferable`'a uyar.
 - **swift-log köprüsü** — `RedactingLogHandler`, swift-log kullanan her paketin loglarını aynı maskeleyiciden ve depolardan geçirir.

@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
+<!-- i18n-source: README.md@8c833a0657592da40b88fd09c24a13d1f4fc5d7c status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -31,7 +31,7 @@ MobileLogger は、iOS、macOS、tvOS、watchOS、visionOS アプリで構造化
 
 - **すべての経路でマスキング** — メッセージ、metadata のキーと値、URL、HTTP ボディは、マスキング仕様のリファレンス実装である [iOSSecurityTools](https://github.com/muhittincamdali/iOSSecurityTools) の `SensitiveDataRedactor` を通ります。対象は、秘密情報の名前、カード番号（Luhn）、IBAN（mod-97）、メールアドレス、JSON Web Token、bearer トークンと長いトークンです。
 - **仕様に照らして検証** — 仕様が定める必須テストセットと、7,866 件の敵対的な入力からなるコーパスを、ロガー自身のエントリポイントから実行します。出力はすべての入力でリファレンスのマスカーの出力と一致しなければならず、エクスポートは隠した内容を加えてはなりません。
-- **Fail-closed の上限** — 大きすぎるメッセージ、64 階層を超えてネストした、または 256 KiB を超える metadata、長すぎる URL は、中途半端に読まれずに全体が隠されます。NaN、無限大、`Int.min` で trap が起きることはありません。
+- **Fail-closed の上限** — 大きすぎるメッセージ、64 階層を超えてネストした、256 KiB を超える、または URL とボディの合計が 256 KiB を超える metadata、長すぎる URL は、中途半端に読まれずに全体が隠されます。NaN、無限大、`Int.min` で trap が起きることはありません。
 - **上限のあるストア** — `MemoryLogStore` は件数とバイト数の予算の範囲で最新のレコードを保持し、`FileLogStore` は決まった数の JSON Lines ファイルをローテーションします。どちらも、増え続けるのではなく、破棄したレコードを数えます。
 - **共有できる形でエクスポート** — `LogArchive` はレベルと日付で絞り込んだ JSON Lines またはテキストを書き出し、`ShareLink` 向けに `Transferable` に準拠しています。
 - **swift-log ブリッジ** — `RedactingLogHandler` は、swift-log を使うすべてのパッケージのログを同じマスカーとストアに通します。

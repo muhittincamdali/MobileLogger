@@ -42,7 +42,7 @@ struct RecordRedactor: Sendable {
     /// The metadata as redacted values, or a note that says why none of it is kept.
     func metadata(_ metadata: LogMetadata) -> (values: [String: RedactedValue], omitted: String?) {
         guard !metadata.isEmpty else { return ([:], nil) }
-        var budget = maximumBodySize
+        var budget = Budget(written: maximumBodySize, read: maximumBodySize)
         let json: Any
         let shape: Shape
         do {
@@ -134,13 +134,28 @@ struct RecordRedactor: Sendable {
         }
     }
 
+    /// What the metadata may still take, in bytes: of JSON text written, and of URLs and bodies
+    /// read by their parsers. Each starts at the body limit.
+    struct Budget {
+        var written: Int
+        var read: Int
+    }
+
     /// The Foundation object `JSONSerialization` writes for a value, and its shape. `budget`
-    /// counts down the bytes of text written, so a huge string fails before it is copied into
-    /// JSON. A URL or body goes in as the text its parser wrote for it.
-    func jsonObject(_ value: LogValue, depth: Int, budget: inout Int) throws(MetadataFailure) -> (Any, Shape) {
+    /// counts down, so a huge string fails before it is copied into JSON and a URL or body fails
+    /// before it is read once the URLs and bodies before it have used up the read budget. A URL or
+    /// body goes in as the text its parser wrote for it.
+    func jsonObject(_ value: LogValue, depth: Int, budget: inout Budget) throws(MetadataFailure) -> (Any, Shape) {
         func spend(_ bytes: Int) throws(MetadataFailure) {
-            budget -= bytes
-            if budget < 0 { throw .tooLarge }
+            budget.written -= bytes
+            if budget.written < 0 { throw .tooLarge }
+        }
+        // A URL or body within the body limit is read whole, so its full size is charged before
+        // it is read, however short its text; one past the limit is replaced unread by a note.
+        func spendRead(_ size: Int) throws(MetadataFailure) {
+            guard size <= maximumBodySize else { return }
+            budget.read -= size
+            if budget.read < 0 { throw .tooLarge }
         }
         switch value {
         case .string(let text):
@@ -156,10 +171,12 @@ struct RecordRedactor: Sendable {
             try spend(5)
             return (NSNumber(value: flag), .plain)
         case .url(let url):
+            try spendRead(url.absoluteString.utf8.count)
             let text = self.url(url)
             try spend(max(text.utf8.count, Self.marker.utf8.count) + 2)
             return (text, .redacted(text))
         case .body(let data, let contentType):
+            try spendRead(data.count)
             let text = redactor.redact(body: data, contentType: contentType)
             try spend(max(text.utf8.count, Self.marker.utf8.count) + 2)
             return (text, .redacted(text))

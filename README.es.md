@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
+<!-- i18n-source: README.md@8c833a0657592da40b88fd09c24a13d1f4fc5d7c status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -31,7 +31,7 @@ MobileLogger es un paquete de Swift para el registro estructurado en apps de iOS
 
 - **Enmascaramiento en cada ruta** — los mensajes, las claves y los valores de metadata, las URL y los cuerpos HTTP pasan por `SensitiveDataRedactor` de [iOSSecurityTools](https://github.com/muhittincamdali/iOSSecurityTools), la implementación de referencia de la especificación de enmascaramiento: nombres de secretos, números de tarjeta (Luhn), IBAN (mod-97), direcciones de correo electrónico, JSON Web Tokens, tokens bearer y tokens largos.
 - **Verificado con la especificación** — el conjunto de pruebas obligatorio de la especificación y su corpus de 7.866 entradas adversarias se ejecutan a través de los puntos de entrada del propio logger; la salida debe ser igual a la del enmascarador de referencia para cada entrada, y la exportación no debe añadir lo que oculta.
-- **Límites fail-closed** — los mensajes demasiado grandes, la metadata anidada a más de 64 niveles o de más de 256 KiB y las URL demasiado largas se ocultan por completo en lugar de leerse a medias; NaN, infinito e `Int.min` nunca provocan un trap.
+- **Límites fail-closed** — los mensajes demasiado grandes, la metadata anidada a más de 64 niveles, de más de 256 KiB o con más de 256 KiB de URL y cuerpos, y las URL demasiado largas se ocultan por completo en lugar de leerse a medias; NaN, infinito e `Int.min` nunca provocan un trap.
 - **Almacenes acotados** — `MemoryLogStore` conserva los registros más recientes dentro de un presupuesto de cantidad y de bytes, `FileLogStore` rota un número fijo de archivos JSON Lines, y ambos cuentan lo que descartan en lugar de crecer.
 - **Exportación lista para compartir** — `LogArchive` escribe JSON Lines o texto, filtrados por nivel y fecha, y cumple `Transferable` para `ShareLink`.
 - **Puente con swift-log** — `RedactingLogHandler` envía los logs de todos los paquetes que usan swift-log por el mismo enmascarador y los mismos almacenes.

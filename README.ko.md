@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
+<!-- i18n-source: README.md@8c833a0657592da40b88fd09c24a13d1f4fc5d7c status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -31,7 +31,7 @@ MobileLogger는 iOS, macOS, tvOS, watchOS, visionOS 앱에서 구조화된 로�
 
 - **모든 경로에서 마스킹** — 메시지, metadata 키와 값, URL, HTTP 본문은 마스킹 사양의 참조 구현인 [iOSSecurityTools](https://github.com/muhittincamdali/iOSSecurityTools)의 `SensitiveDataRedactor`를 거칩니다. 대상은 비밀 이름, 카드 번호(Luhn), IBAN(mod-97), 이메일 주소, JSON Web Token, bearer 토큰과 긴 토큰입니다.
 - **사양에 맞춰 검증** — 사양이 요구하는 테스트 세트와 7,866개의 적대적 입력 코퍼스를 로거 자체의 진입점으로 실행합니다. 모든 입력에서 출력이 참조 마스커의 출력과 같아야 하며, 내보내기가 숨긴 내용을 추가해서는 안 됩니다.
-- **Fail-closed 한도** — 지나치게 큰 메시지, 64단계를 넘게 중첩되었거나 256 KiB보다 큰 metadata, 지나치게 긴 URL은 절반만 읽는 대신 통째로 숨깁니다. NaN, 무한대, `Int.min`은 trap을 일으키지 않습니다.
+- **Fail-closed 한도** — 지나치게 큰 메시지, 64단계를 넘게 중첩되었거나, 256 KiB보다 크거나, URL과 본문이 합쳐서 256 KiB를 넘는 metadata, 지나치게 긴 URL은 절반만 읽는 대신 통째로 숨깁니다. NaN, 무한대, `Int.min`은 trap을 일으키지 않습니다.
 - **한도가 있는 저장소** — `MemoryLogStore`는 개수와 바이트 예산 안에서 최신 레코드를 보관하고, `FileLogStore`는 정해진 개수의 JSON Lines 파일을 순환(rotate)하며, 둘 다 계속 커지는 대신 버린 레코드의 수를 셉니다.
 - **바로 공유할 수 있는 내보내기** — `LogArchive`는 레벨과 날짜로 필터링한 JSON Lines 또는 텍스트를 쓰며, `ShareLink`용으로 `Transferable`을 따릅니다.
 - **swift-log 브리지** — `RedactingLogHandler`는 swift-log를 사용하는 모든 패키지의 로그를 같은 마스커와 저장소로 보냅니다.

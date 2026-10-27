@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
+<!-- i18n-source: README.md@8c833a0657592da40b88fd09c24a13d1f4fc5d7c status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -31,7 +31,7 @@ MobileLogger ist ein Swift-Paket für strukturiertes Logging in iOS-, macOS-, tv
 
 - **Schwärzung auf jedem Pfad** — Nachrichten, Metadata-Schlüssel und -Werte, URLs und HTTP-Bodys laufen durch `SensitiveDataRedactor` aus [iOSSecurityTools](https://github.com/muhittincamdali/iOSSecurityTools), der Referenzimplementierung der Redaction-Spezifikation: Namen von Geheimnissen, Kartennummern (Luhn), IBANs (mod-97), E-Mail-Adressen, JSON Web Tokens, Bearer- und lange Tokens.
 - **An der Spezifikation geprüft** — der vorgeschriebene Testsatz der Spezifikation und ihr Korpus aus 7.866 feindlichen Eingaben laufen über die eigenen Einstiegspunkte des Loggers; die Ausgabe muss für jede Eingabe der des Referenz-Redactors entsprechen, und der Export darf nichts hinzufügen, was er verbirgt.
-- **Fail-closed-Grenzen** — zu große Nachrichten, Metadata mit mehr als 64 Ebenen Verschachtelung oder über 256 KiB sowie zu lange URLs werden vollständig verborgen, statt halb gelesen zu werden; NaN, Unendlich und `Int.min` lösen nie einen Trap aus.
+- **Fail-closed-Grenzen** — zu große Nachrichten, Metadata mit mehr als 64 Ebenen Verschachtelung, über 256 KiB oder mit mehr als 256 KiB an URLs und Bodys sowie zu lange URLs werden vollständig verborgen, statt halb gelesen zu werden; NaN, Unendlich und `Int.min` lösen nie einen Trap aus.
 - **Begrenzte Speicher** — `MemoryLogStore` behält die neuesten Einträge innerhalb eines Anzahl- und eines Byte-Budgets, `FileLogStore` rotiert eine feste Anzahl von JSON-Lines-Dateien, und beide zählen, was sie verwerfen, statt immer weiter zu wachsen.
 - **Export, bereit zum Teilen** — `LogArchive` schreibt JSON Lines oder Text, nach Level und Datum gefiltert, und entspricht `Transferable` für `ShareLink`.
 - **swift-log-Brücke** — `RedactingLogHandler` leitet die Logs jedes Pakets, das swift-log verwendet, durch denselben Redactor und dieselben Speicher.

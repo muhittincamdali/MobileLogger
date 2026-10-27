@@ -41,7 +41,8 @@ public struct RedactionPolicy: Sendable {
     /// How much of a URL is recorded.
     public let urlDetail: URLDetail
     /// The largest body, and the largest metadata as JSON, that is read, in bytes. A larger one
-    /// is omitted unread.
+    /// is omitted unread. The URLs and bodies in one message's metadata may not be larger than
+    /// this together either, counted at full size.
     public let maximumBodySize: Int
     /// The longest message, in UTF-8 bytes, that is read. A longer message is replaced by
     /// `[redacted]` without being read, so one huge string cannot stall the app.

@@ -49,8 +49,12 @@ The metadata is encoded as one JSON object with sorted keys and redacted as a JS
 - **Numbers** of 13 digits or more are written as strings so the card number detector reads
   them; the spec's JSON reading does not look into numbers. NaN and infinity become `nan`,
   `inf` and `-inf`.
-- Metadata nested more than 64 levels, or larger than ``RedactionPolicy/maximumBodySize``
-  (256 KiB), is omitted whole and ``LogRecord/omittedMetadata`` says why.
+- Metadata nested more than 64 levels, larger than ``RedactionPolicy/maximumBodySize``
+  (256 KiB) as JSON, or holding more than that of URLs and bodies together, is omitted whole
+  and ``LogRecord/omittedMetadata`` says why. Each URL and body counts with its full size,
+  charged before it is read, so many bodies under the limit are omitted together instead of
+  being read one after another. A single URL or body past the limit is not read: a URL is
+  hidden, a body is written as its note.
 
 ### URLs and bodies
 

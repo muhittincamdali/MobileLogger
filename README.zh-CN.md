@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
+<!-- i18n-source: README.md@8c833a0657592da40b88fd09c24a13d1f4fc5d7c status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -31,7 +31,7 @@ MobileLogger 是一个 Swift 包，用于在 iOS、macOS、tvOS、watchOS 和 vi
 
 - **每条路径都经过脱敏** — 消息、metadata 的键和值、URL 以及 HTTP body 都会经过 [iOSSecurityTools](https://github.com/muhittincamdali/iOSSecurityTools) 中的 `SensitiveDataRedactor`（脱敏规范的参考实现）：密钥名称、银行卡号（Luhn）、IBAN（mod-97）、电子邮件地址、JSON Web Token、bearer token 和长 token。
 - **按规范校验** — 规范要求的测试集以及包含 7,866 个对抗性输入的语料库，会通过日志器自己的入口运行；对每个输入，输出都必须与参考脱敏器的输出一致，并且导出内容不得添加被隐藏的信息。
-- **Fail-closed 上限** — 过大的消息、嵌套超过 64 层或大于 256 KiB 的 metadata，以及过长的 URL，都会被整体隐藏，而不是只读一半；NaN、无穷大和 `Int.min` 永远不会触发 trap。
+- **Fail-closed 上限** — 过大的消息、嵌套超过 64 层、大于 256 KiB 或其中 URL 和 body 合计超过 256 KiB 的 metadata，以及过长的 URL，都会被整体隐藏，而不是只读一半；NaN、无穷大和 `Int.min` 永远不会触发 trap。
 - **有界存储** — `MemoryLogStore` 在条数和字节预算内保留最新的记录，`FileLogStore` 轮转固定数量的 JSON Lines 文件，二者都会统计被丢弃的记录，而不是无限增长。
 - **导出即可分享** — `LogArchive` 可按级别和日期过滤并写出 JSON Lines 或文本，并遵循 `Transferable`，可用于 `ShareLink`。
 - **swift-log 桥接** — `RedactingLogHandler` 会让所有使用 swift-log 的软件包的日志经过同一个脱敏器和同样的存储。
