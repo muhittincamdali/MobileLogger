@@ -1,53 +1,38 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+MobileLogger exists to keep secrets out of logs, so a secret that reaches a sink, a store or an
+export is a security issue.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+## Supported versions
 
-## Reporting a Vulnerability
+| Version | Supported |
+| ------- | --------- |
+| 2.x     | Yes       |
+| 1.x     | No        |
 
-We take the security of SwiftRouter seriously. If you have discovered a security vulnerability, we appreciate your help in disclosing it to us in a responsible manner.
+## What to report
 
-### How to Report
+- A secret that the redactor hides when called directly but that MobileLogger writes: in a
+  `LogRecord`, through `OSLogSink`, in a `MemoryLogStore` or `FileLogStore`, or in a
+  `LogArchive`.
+- A way to make the logger read without bound (memory, time or stack) or crash: a message,
+  metadata, URL, body or file in the store's folder that does so.
+- A way for logged text to forge records in an export, or for an export file name to leave
+  its folder.
 
-**Please do not report security vulnerabilities through public GitHub issues.**
+A secret that `SensitiveDataRedactor` itself does not hide belongs to the redaction spec and
+its reference implementation. Report it to
+[iOSSecurityTools](https://github.com/muhittincamdali/iOSSecurityTools/security) instead; check
+first whether the spec lists it as a known limit (the
+[Redaction rules](https://muhittincamdali.github.io/MobileLogger/documentation/mobilelogger/redactionrules)
+article summarises them).
 
-Instead, please report them via email to the repository owner. You can find contact information on the GitHub profile.
+## How to report
 
-Please include the following information:
+Use [private vulnerability reporting](https://github.com/muhittincamdali/MobileLogger/security/advisories/new)
+on GitHub. Do not open a public issue. Include the code that logs, the policy, what was written
+and the platform. Never include a real secret: a made-up value of the same shape shows the
+problem just as well.
 
-- Type of issue (e.g., deep link injection, state manipulation, etc.)
-- Full paths of source file(s) related to the manifestation of the issue
-- The location of the affected source code (tag/branch/commit or direct URL)
-- Any special configuration required to reproduce the issue
-- Step-by-step instructions to reproduce the issue
-- Proof-of-concept or exploit code (if possible)
-- Impact of the issue, including how an attacker might exploit it
-
-### What to Expect
-
-- A confirmation of receipt within 48 hours
-- An assessment of the vulnerability within 7 days
-- Regular updates on our progress
-- Credit for responsible disclosure (if desired)
-
-## Security Best Practices
-
-When using SwiftRouter in your projects:
-
-1. **Validate Deep Links** - Always validate URL parameters before navigation
-2. **Use Route Guards** - Implement authentication guards for protected routes
-3. **Sanitize Parameters** - Never trust user input from URL parameters
-4. **Audit Navigation Paths** - Review which screens are accessible via deep links
-
-## Security Features
-
-SwiftRouter includes several security considerations:
-
-- **Type-Safe Parameters** - Reduces injection risks
-- **Route Guards** - Authentication/authorization interceptors
-- **URL Validation** - Built-in URL parsing with validation
-- **No External Dependencies** - Minimal attack surface
+You will get an answer within seven days. Fixes are released as a patch version and noted in
+the [changelog](CHANGELOG.md).

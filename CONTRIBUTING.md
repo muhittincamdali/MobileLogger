@@ -1,80 +1,60 @@
-# Contributing to SwiftRouter
+# Contributing
 
-First off, thank you for considering contributing to SwiftRouter! It's people like you that make SwiftRouter such a great tool.
+Thanks for taking the time to improve MobileLogger.
 
-## Code of Conduct
+## Reporting bugs
 
-This project and everyone participating in it is governed by our Code of Conduct. By participating, you are expected to uphold this code.
+Open an issue with:
 
-## How Can I Contribute?
+- the code that logs (message, metadata and `RedactionPolicy`),
+- what was written and what you expected,
+- platform and OS version, and Xcode version.
 
-### Reporting Bugs
+**Do not open a public issue for a secret that gets through the redactor.** Report it privately
+as described in the [security policy](SECURITY.md).
 
-Before creating bug reports, please check the existing issues as you might find out that you don't need to create one. When you are creating a bug report, please include as many details as possible:
+## Pull requests
 
-- **Use a clear and descriptive title**
-- **Describe the exact steps which reproduce the problem**
-- **Provide specific examples to demonstrate the steps**
-- **Describe the behavior you observed after following the steps**
-- **Explain which behavior you expected to see instead and why**
-- **Include Swift version and OS version**
+1. Fork the repository and branch from `main`.
+2. Keep each pull request focused on one change.
+3. Run the tests on macOS and on an iPhone simulator:
 
-### Suggesting Enhancements
+    ```sh
+    swift test
+    xcodebuild test -scheme MobileLogger-Package \
+      -destination 'platform=iOS Simulator,name=iPhone 17'
+    ```
 
-Enhancement suggestions are tracked as GitHub issues. When creating an enhancement suggestion, please include:
+4. Redaction rules belong to the shared redaction spec and its reference implementation in
+   [iOSSecurityTools](https://github.com/muhittincamdali/iOSSecurityTools); propose rule changes
+   there. A change in this package must keep `ProbeCorpusTests` and `SpecConformanceTests`
+   green: the logger has to write exactly what the reference redactor writes.
+5. If you change logic (the metadata pipeline, a store, the export), add or update a test in
+   `Tests/MobileLoggerTests`. Every new limit must fail closed: hide or drop more, never less.
+6. If you change a README code sample, change the copy in
+   `Examples/LogExplorer/LogExplorer/ReadmeSamples.swift` (or `ReadmeSwiftLogSample.swift`) as
+   well. Those files are what gets compiled: by the example app, and by `swift test` through the
+   symlinks in the test targets, which also check each sample's output. Build the app with:
 
-- **Use a clear and descriptive title**
-- **Provide a step-by-step description of the suggested enhancement**
-- **Provide specific examples to demonstrate the steps**
-- **Describe the current behavior and explain which behavior you expected to see instead**
-- **Explain why this enhancement would be useful**
+    ```sh
+    cd Examples/LogExplorer
+    xcodebuild build -scheme LogExplorer -destination 'generic/platform=iOS Simulator'
+    ```
 
-### Pull Requests
+7. If a change affects the example app's screen, regenerate the screenshots with
+   `scripts/capture-example-screens.sh`.
+8. `README.md` will have translations (`README.<language>.md`). Each one records the version of
+   `README.md` it follows, and CI fails while a translation is behind. If you change `README.md`
+   and cannot update the translations, say so in the pull request.
 
-1. Fork the repo and create your branch from `main`
-2. If you've added code that should be tested, add tests
-3. If you've changed APIs, update the documentation
-4. Ensure the test suite passes
-5. Make sure your code follows the existing style (SwiftLint)
-6. Issue that pull request!
+## Code style
 
-## Development Setup
-
-```bash
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/SwiftRouter.git
-
-# Navigate to the project
-cd SwiftRouter
-
-# Open in Xcode
-open Package.swift
-
-# Run tests
-swift test
-```
-
-## Style Guide
-
-- Follow [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
-- Use SwiftLint for code style consistency
-- Write meaningful commit messages following [Conventional Commits](https://www.conventionalcommits.org/)
-- Document public APIs with DocC-compatible comments
-
-## Commit Messages
-
-We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
-
-- `feat:` A new feature
-- `fix:` A bug fix
-- `docs:` Documentation only changes
-- `style:` Code style changes (formatting, semicolons, etc)
-- `refactor:` Code change that neither fixes a bug nor adds a feature
-- `test:` Adding missing tests
-- `chore:` Changes to the build process or auxiliary tools
-
-Example: `feat(deeplink): add universal link support`
+- Follow the [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/).
+- The package builds in the Swift 6 language mode; new code should not add warnings.
+- Document public API with DocC comments (`///`).
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
+  (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `ci:`, `chore:`).
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing you agree that your contributions are licensed under the MIT License.
