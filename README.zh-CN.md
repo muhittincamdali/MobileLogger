@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@8c833a0657592da40b88fd09c24a13d1f4fc5d7c status=reviewed -->
+<!-- i18n-source: README.md@38e5797342414cc5d17bf60a55cbbb922bd32ae1 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -257,7 +257,7 @@ log.info(message, metadata)
 
 - `Sources/MobileLogger` 包含日志器、记录类型、各个 sink（`Sinks/`）和导出功能（`Export/`）。`Sources/MobileLoggerSwiftLog` 包含 swift-log handler，它是一个独立的产品，因此不使用 swift-log 的应用不会链接它。
 - 脱敏在调用任何 sink 之前、在记录日志的线程上只进行一次。sink 看到的始终只是 `LogRecord` 值，所以新增的 sink 不可能泄露脱敏器已隐藏的内容。
-- URL 和 body 先由各自的解析器脱敏。随后读取 metadata 的 JSON 时，先把脱敏后的文本放在它们的位置上，这样 URL 或 body 会像其他字符串一样隐藏相邻的值；再把一个标记词放在它们的位置上读一次：只有当这个词原样返回时（它的键及其相邻内容都没有隐藏任何东西），才保留 URL 或 body 的文本；在其他任何地方，该值都保持隐藏。
+- URL 和 body 先由各自的解析器脱敏。随后读取 metadata 的 JSON 时，先把脱敏后的文本放在它们的位置上，这样 URL 或 body 会像其他字符串一样隐藏相邻的值；再把一个替代词放在它们的位置上读一次：如果该文本会向相邻的值指明一个秘密，就用一个指明秘密的词，否则用一个中性的标记。只有当这个词原样返回时（它的键及其相邻内容都没有隐藏任何东西），才保留 URL 或 body 的文本；在其他任何地方，该值都保持隐藏。因此，由两个 body 组成、第一个读作 `password` 的一对会隐藏第二个，与两个字符串组成的一对相同。
 - 每一项上限都是 fail-closed：一旦超出，日志器会隐藏或丢弃更多内容，绝不会更少，并且会统计被丢弃的记录。
 - 测试使用 Swift Testing，在 macOS 和 iPhone 模拟器上运行：规范要求的测试集和语料库、metadata 处理流程、存储、导出、swift-log 桥接、README 示例，以及通过 `OSLogStore` 经 unified logging 的一次往返。
 

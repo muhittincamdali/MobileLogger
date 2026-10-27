@@ -304,9 +304,11 @@ log.info(message, metadata)
   `LogRecord` values, so a new sink cannot leak what the redactor hid.
 - URLs and bodies are redacted by their own parsers first. The metadata JSON is then read with
   that text in their place, so a URL or body hides its neighbours like any other string, and
-  once more with a marker word in their place: only where that word comes back unchanged (its
-  key and its neighbours hide nothing) is the URL or body text kept; anywhere else the value
-  stays hidden.
+  once more with a stand-in word in their place: a word that names a secret where the text
+  names one to its neighbours, a neutral marker elsewhere. Only where that word comes back
+  unchanged (its key and its neighbours hide nothing) is the URL or body text kept; anywhere
+  else the value stays hidden. A pair of bodies whose first reads `password` therefore hides the
+  second, as a pair of strings would.
 - Every limit fails closed: past it, the logger hides or drops more, never less, and counts what
   it drops.
 - Tests use Swift Testing and run on macOS and an iPhone simulator: the spec's required set and

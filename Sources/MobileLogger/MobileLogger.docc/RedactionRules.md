@@ -44,7 +44,8 @@ The metadata is encoded as one JSON object with sorted keys and redacted as a JS
   value. A hidden value is hidden whole: a string, a number, an array or a dictionary.
 - **Held names.** A member that holds the name of a field (`name`, `key`, `field`, `label`,
   `type`, `header`, `param`, `path`, `id`) and names a secret hides the other members of its
-  dictionary: `["label": "Password", "value": "hunter2"]` hides `value`.
+  dictionary: `["label": "Password", "value": "hunter2"]` hides `value`. The name and the value
+  may be URLs or bodies too: a `label` body that reads `password` hides a `value` URL.
 - **Strings** are free text, each on its own, read like a message.
 - **Numbers** of 13 digits or more are written as strings so the card number detector reads
   them; the spec's JSON reading does not look into numbers. NaN and infinity become `nan`,
