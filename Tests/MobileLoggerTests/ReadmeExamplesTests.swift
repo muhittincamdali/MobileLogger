@@ -48,6 +48,18 @@ struct ReadmeExamplesTests {
         #expect(text.contains("[error] Sync: Upload failed {"))
         #expect(text.contains(#""attempt":3"#))
         #expect(archive.fileName.hasSuffix(".log"))
+
+        // Nothing unredacted: the line is the one the redactor makes from the sample's input,
+        // and the error's raw description appears only where the redactor kept it whole.
+        let error = URLError(.timedOut)
+        let redacted = record("Upload failed", metadata: ["error": .error(error), "attempt": 3])
+        #expect(text.contains("Sync: \(LogFormat.messageLine(redacted))\n"))
+        let raw = String(describing: error)
+        guard case .object(let members) = redacted.metadata["error"] else {
+            Issue.record("Expected the error as an object")
+            return
+        }
+        #expect(text.contains(raw) == (members["description"] == .string(raw)))
     }
 
     @Test("Policy: allowed keys read on in messages")
