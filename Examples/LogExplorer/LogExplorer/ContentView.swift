@@ -8,31 +8,39 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Log an event") {
-                    ForEach(SampleEvent.allCases) { event in
-                        Button {
-                            diagnostics.log(event)
-                        } label: {
-                            Label(event.rawValue, systemImage: event.systemImage)
-                        }
-                    }
-                }
                 Section {
-                    if diagnostics.records.isEmpty {
-                        Text("Nothing logged yet.")
-                            .foregroundStyle(.secondary)
-                    }
                     ForEach(diagnostics.records) { record in
                         RecordRow(record: record)
                     }
-                } header: {
-                    Text("What the sinks received")
                 } footer: {
-                    Text("Every record was redacted before any sink saw it, so the export below holds the same text.")
+                    if !diagnostics.records.isEmpty {
+                        Text("Every record was redacted before any sink saw it, so the export holds the same text.")
+                    }
+                }
+            }
+            .overlay {
+                if diagnostics.records.isEmpty {
+                    ContentUnavailableView(
+                        "Nothing logged yet", systemImage: "text.badge.checkmark",
+                        description: Text("Log a sample event with the + button.")
+                    )
                 }
             }
             .navigationTitle("Log Explorer")
             .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        ForEach(SampleEvent.allCases) { event in
+                            Button {
+                                diagnostics.log(event)
+                            } label: {
+                                Label(event.rawValue, systemImage: event.systemImage)
+                            }
+                        }
+                    } label: {
+                        Label("Log an event", systemImage: "plus")
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     let archive = diagnostics.archive(format: format)
                     ShareLink(item: archive, preview: SharePreview(archive.fileName)) {
@@ -40,13 +48,13 @@ struct ContentView: View {
                     }
                 }
                 ToolbarItem(placement: .secondaryAction) {
-                    Picker("Format", selection: $format) {
+                    Picker("Export format", selection: $format) {
                         Text("Text").tag(LogExportFormat.text)
                         Text("JSON Lines").tag(LogExportFormat.jsonLines)
                     }
                 }
-                ToolbarItem(placement: .destructiveAction) {
-                    Button("Clear", role: .destructive) {
+                ToolbarItem(placement: .secondaryAction) {
+                    Button("Clear", systemImage: "trash", role: .destructive) {
                         Task { await diagnostics.clear() }
                     }
                 }
