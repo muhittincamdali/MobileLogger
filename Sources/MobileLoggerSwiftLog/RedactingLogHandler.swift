@@ -16,9 +16,10 @@ import MobileLogger
 /// LoggingSystem.bootstrap { label in RedactingLogHandler(label: label, logger: base) }
 /// ```
 ///
-/// The label of each swift-log `Logger` becomes the category. Metadata of every kind
-/// (`.string`, `.stringConvertible`, `.array`, `.dictionary`) is redacted with the message;
-/// a swift-log metadata provider is read too. The level is swift-log's, and the base logger's
+/// The label of each swift-log `Logger` becomes the category and, like any category, is
+/// written as given, not redacted: keep labels fixed names such as `com.example.sync`.
+/// Metadata of every kind (`.string`, `.stringConvertible`, `.array`, `.dictionary`) is
+/// redacted with the message; a swift-log metadata provider is read too. The level is swift-log's, and the base logger's
 /// ``MobileLogger/MobileLogger/minimumLevel`` applies on top of it.
 public struct RedactingLogHandler: LogHandler {
     /// The logger that redacts and writes the messages, with the label as its category.
@@ -31,7 +32,7 @@ public struct RedactingLogHandler: LogHandler {
     /// Creates a handler for one swift-log `Logger`.
     ///
     /// - Parameters:
-    ///   - label: The swift-log label; it becomes the category.
+    ///   - label: The swift-log label; it becomes the category, which is not redacted.
     ///   - logger: The logger whose subsystem, policy and sinks are used.
     ///   - logLevel: The lowest swift-log level passed on; `debug` by default.
     ///   - metadataProvider: Metadata added to every message, such as a trace identifier.

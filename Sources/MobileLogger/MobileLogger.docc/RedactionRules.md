@@ -93,3 +93,8 @@ look-alike letters or digits (`p@ssword`), a secret word in another language (`Ð
 number split by `.` or a line break, a short ordinary-looking path segment (`/reset/abc123`),
 and phone numbers, for which the spec defines no detector. The policy cannot switch the
 secret-name rule off: without it, `password=hunter2` would be written as it is.
+
+The subsystem and the category are not redacted either. They are names chosen in code, not
+data, and every sink and export writes them as given; so is the label of a swift-log `Logger`,
+which `RedactingLogHandler` makes the category. Keep them fixed names such as `Checkout` or
+`com.example.sync`, and put values in the message or the metadata.

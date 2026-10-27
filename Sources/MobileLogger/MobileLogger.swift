@@ -28,8 +28,12 @@ public struct MobileLogger: Sendable {
     }
 
     /// The subsystem, usually the bundle identifier: how Console.app groups the messages.
+    ///
+    /// Written as given, never redacted: keep it a fixed name, never data.
     public let subsystem: String
     /// The category, such as `Network` or `Checkout`.
+    ///
+    /// Written as given, never redacted: keep it a fixed name, never data.
     public let category: String
     /// Messages below this level are dropped before anything is read.
     public var minimumLevel: LogLevel
@@ -45,8 +49,8 @@ public struct MobileLogger: Sendable {
     /// Creates a logger.
     ///
     /// - Parameters:
-    ///   - subsystem: The subsystem; the bundle identifier by default.
-    ///   - category: The category.
+    ///   - subsystem: The subsystem; the bundle identifier by default. Not redacted.
+    ///   - category: The category. Not redacted.
     ///   - minimumLevel: The lowest level that is written; `debug` by default.
     ///   - metadata: Metadata added to every message.
     ///   - policy: What the redactor may let through; the spec's defaults hide the most.
@@ -64,7 +68,7 @@ public struct MobileLogger: Sendable {
         redactor = RecordRedactor(policy: policy)
     }
 
-    /// A logger like this one with another category.
+    /// A logger like this one with another category, which is not redacted.
     public func withCategory(_ category: String) -> MobileLogger {
         MobileLogger(subsystem: subsystem, category: category, minimumLevel: minimumLevel, metadata: metadata, policy: policy, sinks: sinks)
     }
