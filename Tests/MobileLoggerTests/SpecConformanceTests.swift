@@ -162,6 +162,28 @@ struct SpecConformanceTests {
                 == "ParameterKey=[redacted]&ParameterValue=[redacted]")
     }
 
+    @Test("§2 K13: escaped held names are read three ways in metadata", arguments: ["p&#97;ssword", "%card", "&#xcvv", "&#xpass"])
+    func escapedHeldNames(name: String) {
+        #expect(record(metadata: ["name": .string(name), "value": "x"]).metadata["value"] == .string(replacement))
+    }
+
+    @Test("§7 L13: the deepest metadata and the longest message are read on a 512 KiB stack")
+    func smallStack() async {
+        var deep: LogValue = "leaf"
+        for _ in 0..<63 { deep = .dictionary(["k": deep, "password": "hunter2"]) }
+        let metadata: LogMetadata = ["deep": deep, "note": .string(String(repeating: "ab ", count: 20_000))]
+        let message = String(repeating: "status=200 ", count: 5_900)
+        let finished: Bool = await withCheckedContinuation { continuation in
+            let thread = Thread {
+                let made = record(message, metadata: metadata)
+                continuation.resume(returning: made.omittedMetadata == nil && made.message == message)
+            }
+            thread.stackSize = 512 * 1_024
+            thread.start()
+        }
+        #expect(finished)
+    }
+
     // MARK: §8.3 detectors
 
     @Test("§8.3 #25–#36: detectors in messages", arguments: [

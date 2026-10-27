@@ -58,6 +58,21 @@ struct FileLogStoreTests {
         #expect(await reopened.records().map(\.message) == ["before", "after"])
     }
 
+    @Test("A planted line nested 100,000 levels deep is skipped without exhausting the stack")
+    func deeplyNestedLine() async throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        var planted = Data(#"{"metadata":{"a":"#.utf8)
+        planted.append(Data(repeating: UInt8(ascii: "["), count: 100_000))
+        planted.append(Data(repeating: UInt8(ascii: "]"), count: 100_000))
+        planted.append(Data("}}\n".utf8))
+        try planted.write(to: directory.appending(path: "log.1.jsonl"))
+        let store = FileLogStore(directory: directory)
+        store.write(.sample("own"))
+        #expect(await store.records().map(\.message) == ["own"])
+    }
+
     @Test("A file larger than twice the file size is not read")
     func oversizedFile() async throws {
         let directory = temporaryDirectory()
