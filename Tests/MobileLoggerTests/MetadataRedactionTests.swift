@@ -55,6 +55,54 @@ struct MetadataRedactionTests {
         #expect(named["field"] == .object(["name": .string("https://example.com/reset"), "value": .string(replacement)]))
     }
 
+    @Test("A held name and the value beside it hide that value when both are bodies or URLs")
+    func heldNameAndValueAsBodyOrURL() {
+        let password = LogValue.body(Data("password".utf8), contentType: "text/plain")
+        let secret = LogValue.body(Data("hunter2".utf8), contentType: "text/plain")
+
+        let field = record(metadata: ["f": [["label": password, "value": secret]]]).metadata
+        #expect(field["f"] == .array([.object(["label": .string("password"), "value": .string(replacement)])]))
+
+        let pair = record(metadata: ["h": [[password, secret]]]).metadata
+        #expect(pair["h"] == .array([.array([.string("password"), .string(replacement)])]))
+
+        let header = LogValue.body(Data("Authorization".utf8), contentType: "text/plain")
+        let bearer = LogValue.body(Data("Bearer hunter2".utf8), contentType: "text/plain")
+        let headerPair = record(metadata: ["h": [[header, bearer]]]).metadata
+        #expect(headerPair["h"] == .array([.array([.string("Authorization"), .string(replacement)])]))
+
+        let link = LogValue.url(URL(string: "https://x.test/hunter2")!)
+        let linked = record(metadata: ["f": [["label": password, "value": link]]]).metadata
+        #expect(linked["f"] == .array([.object(["label": .string("password"), "value": .string(replacement)])]))
+    }
+
+    @Test("URLs and bodies that name no secret keep each other, even where free text would hide them")
+    func urlsAndBodiesBesideEachOther() {
+        // `https://x.test/users/:id` reads as `[redacted]` as free text, so only the stand-in pass
+        // can tell that nothing beside it hides it.
+        let values = record(metadata: [
+            "l": [.url(URL(string: "https://x.test/users/12345678")!), .url(URL(string: "https://x.test/a")!), .body(Data("hello".utf8), contentType: "text/plain")],
+            "pair": [.body(Data("accept".utf8), contentType: "text/plain"), .url(URL(string: "https://x.test/users/12345678")!)],
+            "f": ["label": .body(Data("status".utf8), contentType: "text/plain"), "value": .url(URL(string: "https://x.test/users/12345678")!)],
+        ]).metadata
+        #expect(values["l"] == .array([.string("https://x.test/users/:id"), .string("https://x.test/a"), .string("hello")]))
+        #expect(values["pair"] == .array([.string("accept"), .string("https://x.test/users/:id")]))
+        #expect(values["f"] == .object(["label": .string("status"), "value": .string("https://x.test/users/:id")]))
+    }
+
+    @Test("Every way of naming a secret hides a body or URL beside it as it hides a string", arguments: heldNameShapes)
+    func heldNameShapesHideBodiesAndURLs(shape: HeldNameShape) {
+        // The plain string form is the reference: the shape must hide a string value.
+        let reference = encoded(record(metadata: shape.build(.string("password"), .string("hunter2"))).metadata)
+        #expect(!reference.contains("hunter2"), "\(shape.name): the reference form leaks")
+        for (nameForm, name) in heldNames {
+            for (valueForm, value) in secretValues {
+                let text = encoded(record(metadata: shape.build(name, value)).metadata)
+                #expect(!text.contains("hunter2"), "\(shape.name), \(nameForm) name, \(valueForm) value: \(text)")
+            }
+        }
+    }
+
     @Test("A string that equals the internal marker or a body's text stays the string it is")
     func markerAsString() {
         let values = record(metadata: [
@@ -171,4 +219,47 @@ struct MetadataRedactionTests {
         #expect(members["description"] == .string("upload failed for token=[redacted]"))
         #expect(members["kind"]?.stringValue?.hasSuffix("UploadError") == true)
     }
+}
+
+/// A metadata layout in which one value names a secret and so hides another.
+struct HeldNameShape: Sendable, CustomTestStringConvertible {
+    let name: String
+    let build: @Sendable (_ name: LogValue, _ value: LogValue) -> LogMetadata
+
+    var testDescription: String { name }
+}
+
+let heldNameShapes: [HeldNameShape] = [
+    HeldNameShape(name: "label/value") { name, value in ["f": ["label": name, "value": value]] },
+    HeldNameShape(name: "name/value") { name, value in ["f": ["name": name, "value": value]] },
+    HeldNameShape(name: "field/data") { name, value in ["f": ["field": name, "data": value]] },
+    HeldNameShape(name: "pair") { name, value in ["h": [[name, value]]] },
+    HeldNameShape(name: "list") { name, value in ["l": [name, value]] },
+    HeldNameShape(name: "top level") { name, value in ["type": name, "value": value] },
+    HeldNameShape(name: "nested") { name, value in ["a": ["b": [["label": name, "value": value]]]] },
+    HeldNameShape(name: "two values") { name, value in ["f": ["label": name, "old": value, "new": value]] },
+]
+
+/// Names of a secret written as bodies and URLs.
+let heldNames: [(String, LogValue)] = [
+    ("text body", .body(Data("password".utf8), contentType: "text/plain")),
+    ("untyped body", .body(Data("Authorization".utf8), contentType: nil)),
+    ("JSON body", .body(Data(#""password""#.utf8), contentType: "application/json")),
+    ("relative URL", .url(URL(string: "password")!)),
+]
+
+/// A secret written as bodies and URLs.
+let secretValues: [(String, LogValue)] = [
+    ("text body", .body(Data("hunter2".utf8), contentType: "text/plain")),
+    ("bearer body", .body(Data("Bearer hunter2".utf8), contentType: nil)),
+    ("JSON body", .body(Data(#"{"note":"hunter2"}"#.utf8), contentType: "application/json")),
+    ("form body", .body(Data("note=hunter2".utf8), contentType: "application/x-www-form-urlencoded")),
+    ("URL", .url(URL(string: "https://x.test/hunter2")!)),
+]
+
+/// Redacted metadata as JSON text, to search for a secret anywhere in it.
+func encoded(_ metadata: [String: RedactedValue]) -> String {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+    return (try? encoder.encode(metadata)).map { String(decoding: $0, as: UTF8.self) } ?? ""
 }

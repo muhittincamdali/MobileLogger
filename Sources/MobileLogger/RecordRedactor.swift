@@ -8,12 +8,13 @@ import iOSSecurityTools
 /// object, and strings are free text. URLs and bodies are read by their own parsers first. When
 /// the metadata holds any, the JSON is read twice: once with the text written for each URL and
 /// body in its place, so that text names secrets to its neighbours like any other string and
-/// every other value is taken from this pass; and once with a marker word in its place, so a URL
-/// or body is written only where that word comes back unchanged (its key and its neighbours hide
-/// nothing). Anywhere else it is hidden.
+/// every other value is taken from this pass; and once with a stand-in word in its place (see
+/// ``standIns(_:shape:)``), a word that names a secret to its neighbours exactly where the text
+/// does. A URL or body is written only where the second pass keeps its word: its key and its
+/// neighbours hide nothing. Anywhere else it is hidden.
 struct RecordRedactor: Sendable {
-    /// Stands for a URL or body in the second JSON pass. Plain lowercase ASCII that names no
-    /// secret, so free text keeps it unless its key or a neighbour hides it.
+    /// Stands for a URL or body that names no secret in the second JSON pass. Plain lowercase
+    /// ASCII that names no secret, so free text keeps it unless its key or a neighbour hides it.
     static let marker = "mobileloggerref"
 
     /// JSON may be open this many levels in all (REDACTION-SPEC L3); the metadata object is one.
@@ -58,7 +59,7 @@ struct RecordRedactor: Sendable {
         case .success(let parsed): texts = parsed
         }
         if shape.holdsURLOrBody {
-            switch redactJSON(Self.marked(json, shape: shape)) {
+            switch redactJSON(standIns(json, shape: shape)) {
             case .failure(let note): return ([:], note.text)
             case .success(let parsed): marked = parsed
             }
@@ -221,30 +222,14 @@ struct RecordRedactor: Sendable {
 
     // MARK: - Decoding
 
-    /// The JSON with the marker word in place of each URL and body text.
-    static func marked(_ json: Any, shape: Shape) -> Any {
-        switch shape {
-        case .plain: return json
-        case .redacted: return marker
-        case .array(let shapes):
-            guard let array = json as? [Any] else { return json }
-            return zip(array, shapes).map { marked($0, shape: $1) }
-        case .object(let shapes):
-            guard let object = json as? [String: Any] else { return json }
-            return object.reduce(into: [String: Any]()) { result, member in
-                result[member.key] = shapes[member.key].map { marked(member.value, shape: $0) } ?? member.value
-            }
-        }
-    }
-
     /// The redacted value for one parsed JSON value: the first pass's value, except where `shape`
     /// says the input held a URL or body. That one is written as its own parser wrote it when
-    /// the marker pass kept the marker, and hidden otherwise. `shape` is nil where the output no
-    /// longer lines up with the input (a key the redactor rewrote); the first pass's text is
-    /// kept there, which is the URL or body text redacted once more as free text.
+    /// ``keepsWritten(standIn:)`` says so, and hidden otherwise. `shape` is nil where the
+    /// output no longer lines up with the input (a key the redactor rewrote); the first pass's
+    /// text is kept there, which is the URL or body text redacted once more as free text.
     static func restore(_ value: Any, marked: Any?, shape: Shape?) -> RedactedValue {
         if case .redacted(let written) = shape {
-            return .string(marked as? String == Self.marker ? written : SensitiveDataRedactor.replacement)
+            return .string(keepsWritten(standIn: marked) ? written : SensitiveDataRedactor.replacement)
         }
         switch value {
         case let text as String:

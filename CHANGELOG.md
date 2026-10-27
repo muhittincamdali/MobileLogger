@@ -56,6 +56,11 @@ removed; nothing of it is kept.
   strings so the card number detector reads them.
 - The text export indents every line break inside a record, so a logged message cannot forge
   a record line.
+- A held name hides the value beside it when both are URLs or bodies, as it does when both are
+  strings: `[[.body("password"), .body("hunter2")]]` and
+  `["label": .body("password"), "value": .url(…)]` hide the value. The second metadata pass puts
+  a word that names a secret in place of each URL or body whose text names one, so it sees the
+  same names as the first.
 
 ## [1.0.0] - 2026-02-03
 
