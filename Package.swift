@@ -41,7 +41,8 @@ let package = Package(
                 "MobileLogger",
                 .product(name: "iOSSecurityTools", package: "iOSSecurityTools")
             ],
-            path: "Tests/MobileLoggerTests"
+            path: "Tests/MobileLoggerTests",
+            resources: [.copy("Resources/ReviewProbes.jsonl")]
         ),
         .testTarget(
             name: "MobileLoggerSwiftLogTests",
