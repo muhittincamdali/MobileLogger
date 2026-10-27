@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@8e97ff5e024616dc4fc4a56edaa1f454b20857ec status=reviewed -->
+<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -257,7 +257,7 @@ log.info(message, metadata)
 
 - `Sources/MobileLogger` には、ロガー、レコード型、sink（`Sinks/`）、エクスポート（`Export/`）が入っています。`Sources/MobileLoggerSwiftLog` には swift-log のハンドラが入っています。swift-log を使わないアプリがリンクしないよう、別のプロダクトになっています。
 - マスキングは、どの sink が呼ばれるよりも前に、ログを記録したスレッドで 1 回だけ行われます。sink が目にするのは `LogRecord` の値だけなので、新しい sink がマスカーの隠した内容を漏らすことはありません。
-- metadata の JSON では、URL やボディは目印となる単語として置かれます。その単語が変更されずに戻ってきた場合（そのキーと隣接する値が何も隠していない場合）にだけ、別途マスクした URL やボディがその位置に戻されます。それ以外の場所では、値は隠されたままです。
+- URL とボディは、まずそれぞれのパーサーでマスクされます。次に metadata の JSON を、その位置にマスク後のテキストを置いて読みます。これにより URL やボディも、ほかの文字列と同じように隣接する値を隠します。さらにもう一度、その位置に目印となる単語を置いて読みます。その単語が変更されずに戻ってきた場合（そのキーと隣接する値が何も隠していない場合）にだけ、URL やボディのテキストが残ります。それ以外の場所では、値は隠されたままです。
 - すべての上限は fail-closed です。上限を超えると、ロガーはより多くを隠すか破棄し、少なくなることは決してありません。また、破棄した件数も数えます。
 - テストは Swift Testing を使い、macOS と iPhone シミュレータで実行されます。対象は、仕様の必須セットとコーパス、metadata のパイプライン、ストア、エクスポート、swift-log ブリッジ、README のサンプル、そして `OSLogStore` を使った unified logging の往復です。
 

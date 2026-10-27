@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@8e97ff5e024616dc4fc4a56edaa1f454b20857ec status=reviewed -->
+<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -257,7 +257,7 @@ log.info(message, metadata)
 
 - `Sources/MobileLogger` contém o logger, os tipos de registro, os sinks (`Sinks/`) e a exportação (`Export/`). `Sources/MobileLoggerSwiftLog` contém o handler do swift-log, um produto separado para que apps sem swift-log não o vinculem.
 - A mascaramento acontece uma única vez, na thread que registra o log, antes de qualquer sink ser chamado. Os sinks só veem valores `LogRecord`, então um sink novo não consegue vazar o que o mascarador ocultou.
-- No JSON da metadata, uma URL ou um corpo aparece como uma palavra marcadora. Só onde essa palavra volta inalterada (sua chave e suas vizinhas não ocultam nada) a URL ou o corpo mascarado separadamente é colocado no lugar dela; em qualquer outro lugar, o valor continua oculto.
+- URLs e corpos são mascarados primeiro pelos próprios parsers. Depois, o JSON da metadata é lido com esse texto no lugar deles, de modo que uma URL ou um corpo oculta suas vizinhas como qualquer outra string, e uma segunda vez com uma palavra marcadora no lugar deles: só onde essa palavra volta inalterada (sua chave e suas vizinhas não ocultam nada) o texto da URL ou do corpo é mantido; em qualquer outro lugar, o valor continua oculto.
 - Todo limite é fail-closed: ao passar dele, o logger oculta ou descarta mais, nunca menos, e conta o que descarta.
 - Os testes usam o Swift Testing e rodam no macOS e em um simulador de iPhone: o conjunto obrigatório e o corpus da especificação, o pipeline da metadata, os armazenamentos, a exportação, a ponte com o swift-log, os exemplos do README e uma ida e volta pelo unified logging com `OSLogStore`.
 

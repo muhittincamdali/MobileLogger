@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@8e97ff5e024616dc4fc4a56edaa1f454b20857ec status=reviewed -->
+<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -257,7 +257,7 @@ log.info(message, metadata)
 
 - `Sources/MobileLogger` enthält den Logger, die Eintragstypen, die Sinks (`Sinks/`) und den Export (`Export/`). `Sources/MobileLoggerSwiftLog` enthält den swift-log-Handler, ein eigenes Produkt, damit Apps ohne swift-log ihn nicht mitlinken.
 - Die Schwärzung geschieht einmal, auf dem Thread, der loggt, bevor ein Sink aufgerufen wird. Sinks sehen immer nur `LogRecord`-Werte, sodass ein neuer Sink nichts preisgeben kann, was der Redactor verborgen hat.
-- Im Metadata-JSON steht eine URL oder ein Body als Platzhalterwort. Nur wo dieses Wort unverändert zurückkommt (sein Schlüssel und seine Nachbarn verbergen nichts), wird die separat geschwärzte URL bzw. der separat geschwärzte Body an seine Stelle gesetzt; überall sonst bleibt der Wert verborgen.
+- URLs und Bodys werden zuerst von ihren eigenen Parsern geschwärzt. Danach wird das Metadata-JSON mit diesem Text an ihrer Stelle gelesen, sodass eine URL oder ein Body seine Nachbarn verbirgt wie jeder andere String, und ein zweites Mal mit einem Platzhalterwort an ihrer Stelle: Nur wo dieses Wort unverändert zurückkommt (sein Schlüssel und seine Nachbarn verbergen nichts), bleibt der Text der URL bzw. des Bodys erhalten; überall sonst bleibt der Wert verborgen.
 - Jede Grenze ist fail-closed: Wird sie überschritten, verbirgt oder verwirft der Logger mehr, nie weniger, und zählt, was er verwirft.
 - Die Tests verwenden Swift Testing und laufen auf macOS und in einem iPhone-Simulator: der vorgeschriebene Satz und der Korpus der Spezifikation, die Metadata-Pipeline, die Speicher, der Export, die swift-log-Brücke, die README-Beispiele und ein Rundlauf durch Unified Logging mit `OSLogStore`.
 

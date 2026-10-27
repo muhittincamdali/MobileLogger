@@ -39,9 +39,28 @@ struct MetadataRedactionTests {
         #expect(redactedValue(url, key: "ünïcode") == .string(replacement))
     }
 
-    @Test("A string that equals the internal marker is never mistaken for a URL")
+    @Test("A held name given as a body or URL hides its neighbours like the same name as a string")
+    func heldNameAsBodyOrURL() {
+        let name = LogValue.body(Data("password".utf8), contentType: "text/plain")
+        let field = record(metadata: ["fields": [["label": name, "value": "hunter2"]]]).metadata
+        #expect(field["fields"] == .array([.object(["label": .string("password"), "value": .string(replacement)])]))
+
+        let header = LogValue.body(Data("Authorization".utf8), contentType: "text/plain")
+        let pair = record(metadata: ["h": [[header, "hunter2"]]]).metadata
+        #expect(pair["h"] == .array([.array([.string("Authorization"), .string(replacement)])]))
+
+        // A held name that is not a plain key, such as a URL's text, hides its neighbours too.
+        let link = LogValue.url(URL(string: "https://example.com/reset")!)
+        let named = record(metadata: ["field": ["name": link, "value": "x"]]).metadata
+        #expect(named["field"] == .object(["name": .string("https://example.com/reset"), "value": .string(replacement)]))
+    }
+
+    @Test("A string that equals the internal marker or a body's text stays the string it is")
     func markerAsString() {
-        #expect(redactedValue(.string(RecordRedactor.marker), key: "note") == .string(replacement))
+        let values = record(metadata: [
+            "a": .string(RecordRedactor.marker), "b": "hello", "c": .body(Data("hello".utf8), contentType: "text/plain"),
+        ]).metadata
+        #expect(values == ["a": .string(RecordRedactor.marker), "b": .string("hello"), "c": .string("hello")])
     }
 
     @Test("Non-finite doubles are written as strings instead of trapping in JSONSerialization", arguments: [

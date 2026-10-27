@@ -302,9 +302,11 @@ log.info(message, metadata)
   apps without swift-log do not link it.
 - Redaction happens once, on the thread that logs, before any sink is called. Sinks only ever see
   `LogRecord` values, so a new sink cannot leak what the redactor hid.
-- In the metadata JSON, a URL or body stands as a marker word. Only where that word comes back
-  unchanged (its key and its neighbours hide nothing) is the separately redacted URL or body put
-  in its place; anywhere else the value stays hidden.
+- URLs and bodies are redacted by their own parsers first. The metadata JSON is then read with
+  that text in their place, so a URL or body hides its neighbours like any other string, and
+  once more with a marker word in their place: only where that word comes back unchanged (its
+  key and its neighbours hide nothing) is the URL or body text kept; anywhere else the value
+  stays hidden.
 - Every limit fails closed: past it, the logger hides or drops more, never less, and counts what
   it drops.
 - Tests use Swift Testing and run on macOS and an iPhone simulator: the spec's required set and

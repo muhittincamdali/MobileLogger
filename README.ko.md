@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@8e97ff5e024616dc4fc4a56edaa1f454b20857ec status=reviewed -->
+<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -257,7 +257,7 @@ log.info(message, metadata)
 
 - `Sources/MobileLogger`에는 로거, 레코드 타입, sink(`Sinks/`), 내보내기(`Export/`)가 있습니다. `Sources/MobileLoggerSwiftLog`에는 swift-log 핸들러가 있으며, swift-log를 사용하지 않는 앱이 링크하지 않도록 별도의 제품으로 분리되어 있습니다.
 - 마스킹은 어떤 sink가 호출되기 전에, 로그를 남기는 스레드에서 한 번만 일어납니다. sink는 `LogRecord` 값만 보게 되므로, 새로 만든 sink가 마스커가 숨긴 내용을 유출할 수 없습니다.
-- metadata JSON에서 URL이나 본문은 표지 단어로 들어갑니다. 그 단어가 바뀌지 않고 돌아온 곳(그 키와 이웃 값이 아무것도 숨기지 않은 곳)에서만, 따로 마스킹한 URL이나 본문이 그 자리에 들어갑니다. 그 밖의 모든 곳에서는 값이 숨겨진 채로 남습니다.
+- URL과 본문은 먼저 각자의 파서로 마스킹됩니다. 그다음 metadata JSON을 그 자리에 마스킹된 텍스트를 넣어 읽으므로, URL이나 본문도 다른 문자열처럼 이웃 값을 숨깁니다. 이어서 그 자리에 표지 단어를 넣어 한 번 더 읽습니다. 그 단어가 바뀌지 않고 돌아온 곳(그 키와 이웃 값이 아무것도 숨기지 않은 곳)에서만 URL이나 본문의 텍스트가 남습니다. 그 밖의 모든 곳에서는 값이 숨겨진 채로 남습니다.
 - 모든 한도는 fail-closed입니다. 한도를 넘으면 로거는 더 많이 숨기거나 버리며 결코 덜 숨기지 않고, 버린 것의 수를 셉니다.
 - 테스트는 Swift Testing을 사용하며 macOS와 iPhone 시뮬레이터에서 실행됩니다. 사양의 필수 세트와 코퍼스, metadata 파이프라인, 저장소, 내보내기, swift-log 브리지, README 예제, 그리고 `OSLogStore`를 통한 unified logging 왕복 테스트를 다룹니다.
 

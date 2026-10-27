@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@8e97ff5e024616dc4fc4a56edaa1f454b20857ec status=reviewed -->
+<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -257,7 +257,7 @@ log.info(message, metadata)
 
 - `Sources/MobileLogger` содержит логгер, типы записей, sink-и (`Sinks/`) и экспорт (`Export/`). `Sources/MobileLoggerSwiftLog` содержит обработчик swift-log; это отдельный продукт, чтобы приложения без swift-log не линковали его.
 - Маскирование выполняется один раз, в потоке, который пишет лог, до вызова любого sink. Sink-и видят только значения `LogRecord`, поэтому новый sink не может раскрыть то, что скрыл маскировщик.
-- В JSON с metadata URL или тело представлено словом-маркером. Только там, где это слово возвращается без изменений (его ключ и соседние значения ничего не скрывают), на его место подставляется отдельно замаскированный URL или тело; в любом другом месте значение остаётся скрытым.
+- URL и тела сначала маскируются собственными парсерами. Затем JSON с metadata читается с этим текстом на их месте, поэтому URL или тело скрывает соседние значения, как любая другая строка, и ещё раз со словом-маркером на их месте: только там, где это слово возвращается без изменений (его ключ и соседние значения ничего не скрывают), текст URL или тела сохраняется; в любом другом месте значение остаётся скрытым.
 - Каждый лимит работает по принципу fail-closed: при его превышении логгер скрывает или отбрасывает больше, но никогда не меньше, и считает отброшенное.
 - Тесты используют Swift Testing и запускаются на macOS и в симуляторе iPhone: обязательный набор и корпус спецификации, конвейер metadata, хранилища, экспорт, мост для swift-log, примеры из README и полный цикл через unified logging с `OSLogStore`.
 

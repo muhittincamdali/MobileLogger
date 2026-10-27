@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@8e97ff5e024616dc4fc4a56edaa1f454b20857ec status=reviewed -->
+<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -257,7 +257,7 @@ log.info(message, metadata)
 
 - `Sources/MobileLogger` logger'ı, kayıt türlerini, sink'leri (`Sinks/`) ve dışa aktarımı (`Export/`) içerir. `Sources/MobileLoggerSwiftLog` swift-log handler'ını içerir; swift-log kullanmayan uygulamaların onu bağlamaması için ayrı bir üründür.
 - Maskeleme, herhangi bir sink çağrılmadan önce, loglamayı yapan thread üzerinde bir kez gerçekleşir. Sink'ler yalnızca `LogRecord` değerlerini görür; bu yüzden yeni bir sink, maskeleyicinin gizlediğini sızdıramaz.
-- Metadata JSON'unda bir URL veya gövde, bir işaret sözcüğü olarak durur. Ayrı olarak maskelenmiş URL veya gövde, yalnızca bu sözcüğün değişmeden geri geldiği yerde (anahtarı ve komşuları hiçbir şey gizlemiyorsa) onun yerine konur; başka her yerde değer gizli kalır.
+- URL'ler ve gövdeler önce kendi ayrıştırıcılarıyla maskelenir. Ardından metadata JSON'u, onların yerinde bu metinle okunur; böylece bir URL veya gövde, komşularını diğer her string gibi gizler. Sonra bir kez de onların yerinde bir işaret sözcüğüyle okunur: URL'nin veya gövdenin metni yalnızca bu sözcüğün değişmeden geri geldiği yerde (anahtarı ve komşuları hiçbir şey gizlemiyorsa) korunur; başka her yerde değer gizli kalır.
 - Her sınır fail-closed çalışır: sınır aşıldığında logger daha fazlasını gizler veya atar, asla daha azını; attığı kayıtları da sayar.
 - Testler Swift Testing kullanır ve macOS'ta ve bir iPhone simülatöründe çalışır: spesifikasyonun zorunlu seti ve korpusu, metadata hattı, depolar, dışa aktarım, swift-log köprüsü, README örnekleri ve `OSLogStore` ile unified logging üzerinden gidip gelen bir tur.
 

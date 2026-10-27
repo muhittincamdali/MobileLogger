@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@8e97ff5e024616dc4fc4a56edaa1f454b20857ec status=reviewed -->
+<!-- i18n-source: README.md@448e50b8cf38056bf1786c19c1b3c09c557e7ac2 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -257,7 +257,7 @@ log.info(message, metadata)
 
 - `Sources/MobileLogger` contient le logger, les types d’enregistrement, les sinks (`Sinks/`) et l’export (`Export/`). `Sources/MobileLoggerSwiftLog` contient le handler swift-log, un produit séparé pour que les apps sans swift-log ne le lient pas.
 - Le masquage a lieu une seule fois, sur le thread qui journalise, avant l’appel de tout sink. Les sinks ne voient jamais que des valeurs `LogRecord` : un nouveau sink ne peut donc pas divulguer ce que le module de masquage a masqué.
-- Dans le JSON des metadata, une URL ou un corps est représenté par un mot repère. Ce n’est que lorsque ce mot revient inchangé (sa clé et ses voisins ne masquent rien) que l’URL ou le corps masqué séparément est remis à sa place ; partout ailleurs, la valeur reste masquée.
+- Les URL et les corps sont d’abord masqués par leurs propres parseurs. Le JSON des metadata est ensuite lu avec ce texte à leur place, si bien qu’une URL ou un corps masque ses voisins comme toute autre chaîne, puis une seconde fois avec un mot repère à leur place : ce n’est que lorsque ce mot revient inchangé (sa clé et ses voisins ne masquent rien) que le texte de l’URL ou du corps est conservé ; partout ailleurs, la valeur reste masquée.
 - Chaque limite est fail-closed : une fois dépassée, le logger masque ou supprime davantage, jamais moins, et compte ce qu’il supprime.
 - Les tests utilisent Swift Testing et s’exécutent sur macOS et dans un simulateur d’iPhone : le jeu obligatoire et le corpus de la spécification, le pipeline des metadata, les stockages, l’export, la passerelle swift-log, les exemples du README et un aller-retour par unified logging avec `OSLogStore`.
 

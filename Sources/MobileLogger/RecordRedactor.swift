@@ -5,11 +5,14 @@ import iOSSecurityTools
 ///
 /// The metadata is read as one JSON object, the structured input of the redaction spec: keys are
 /// judged by the secret-name rule, a member that names a secret hides the other members of its
-/// object, and strings are free text. URLs and bodies are read by their own parsers: in the JSON
-/// they stand as a marker word, and only where that word comes back unchanged (its key and its
-/// neighbours hide nothing) is the redacted URL or body put in its place.
+/// object, and strings are free text. URLs and bodies are read by their own parsers first. When
+/// the metadata holds any, the JSON is read twice: once with the text written for each URL and
+/// body in its place, so that text names secrets to its neighbours like any other string and
+/// every other value is taken from this pass; and once with a marker word in its place, so a URL
+/// or body is written only where that word comes back unchanged (its key and its neighbours hide
+/// nothing). Anywhere else it is hidden.
 struct RecordRedactor: Sendable {
-    /// Stands for a URL or body in the JSON that is redacted. Plain lowercase ASCII that names no
+    /// Stands for a URL or body in the second JSON pass. Plain lowercase ASCII that names no
     /// secret, so free text keeps it unless its key or a neighbour hides it.
     static let marker = "mobileloggerref"
 
@@ -40,27 +43,53 @@ struct RecordRedactor: Sendable {
     func metadata(_ metadata: LogMetadata) -> (values: [String: RedactedValue], omitted: String?) {
         guard !metadata.isEmpty else { return ([:], nil) }
         var budget = maximumBodySize
-        let encoded: Any
+        let json: Any
+        let shape: Shape
         do {
-            encoded = try Self.jsonObject(.dictionary(metadata), depth: 1, budget: &budget)
+            (json, shape) = try jsonObject(.dictionary(metadata), depth: 1, budget: &budget)
         } catch let failure {
             return ([:], failure.note)
         }
-        guard let data = try? JSONSerialization.data(withJSONObject: encoded, options: [.sortedKeys, .withoutEscapingSlashes]) else {
-            return ([:], MetadataFailure.unreadable.note)
+        guard case .object(let shapes) = shape else { return ([:], MetadataFailure.unreadable.note) }
+        let texts: [String: Any]
+        let marked: [String: Any]
+        switch redactJSON(json) {
+        case .failure(let note): return ([:], note.text)
+        case .success(let parsed): texts = parsed
+        }
+        if shape.holdsURLOrBody {
+            switch redactJSON(Self.marked(json, shape: shape)) {
+            case .failure(let note): return ([:], note.text)
+            case .success(let parsed): marked = parsed
+            }
+        } else {
+            marked = texts
+        }
+        var values: [String: RedactedValue] = [:]
+        for (key, value) in texts {
+            values[key] = Self.restore(value, marked: marked[key], shape: shapes[key])
+        }
+        return (values, nil)
+    }
+
+    /// A note that says why the metadata is omitted.
+    struct OmittedNote: Error {
+        let text: String
+    }
+
+    /// The JSON object after one pass of the redactor, parsed again.
+    func redactJSON(_ json: Any) -> Result<[String: Any], OmittedNote> {
+        guard let data = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .withoutEscapingSlashes]) else {
+            return .failure(OmittedNote(text: MetadataFailure.unreadable.note))
         }
         let output = redactor.redact(body: data, contentType: "application/json")
         guard output.hasPrefix("{"),
               let parsed = try? JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any]
         else {
             // The redactor omitted the JSON (too large, too deep): its note says so.
-            return ([:], output.hasPrefix("{") ? MetadataFailure.unreadable.note : output)
+            return .failure(OmittedNote(text: output.hasPrefix("{") ? MetadataFailure.unreadable.note : output))
         }
-        var values: [String: RedactedValue] = [:]
-        for (key, value) in parsed {
-            values[key] = restore(value, input: metadata[key])
-        }
-        return (values, nil)
+        return .success(parsed)
     }
 
     /// The text written for a URL: as `redact(url:)` writes it, or hidden whole when the URL is
@@ -86,9 +115,29 @@ struct RecordRedactor: Sendable {
         }
     }
 
-    /// The Foundation object `JSONSerialization` writes for a value. `budget` counts down the
-    /// bytes of text written, so a huge string fails before it is copied into JSON.
-    static func jsonObject(_ value: LogValue, depth: Int, budget: inout Int) throws(MetadataFailure) -> Any {
+    /// Where a value held a URL or body, and the text its parser wrote for it, so the output of
+    /// the JSON passes can be lined up with the input.
+    indirect enum Shape {
+        case plain
+        case redacted(String)
+        case array([Shape])
+        case object([String: Shape])
+
+        /// Whether a URL or body is anywhere in the value.
+        var holdsURLOrBody: Bool {
+            switch self {
+            case .plain: false
+            case .redacted: true
+            case .array(let shapes): shapes.contains { $0.holdsURLOrBody }
+            case .object(let shapes): shapes.values.contains { $0.holdsURLOrBody }
+            }
+        }
+    }
+
+    /// The Foundation object `JSONSerialization` writes for a value, and its shape. `budget`
+    /// counts down the bytes of text written, so a huge string fails before it is copied into
+    /// JSON. A URL or body goes in as the text its parser wrote for it.
+    func jsonObject(_ value: LogValue, depth: Int, budget: inout Int) throws(MetadataFailure) -> (Any, Shape) {
         func spend(_ bytes: Int) throws(MetadataFailure) {
             budget -= bytes
             if budget < 0 { throw .tooLarge }
@@ -96,41 +145,51 @@ struct RecordRedactor: Sendable {
         switch value {
         case .string(let text):
             try spend(text.utf8.count + 2)
-            return text
+            return (text, .plain)
         case .int(let number):
             try spend(20)
-            return number.magnitude >= smallestDigitString ? String(number) : NSNumber(value: number)
+            return (number.magnitude >= Self.smallestDigitString ? String(number) : NSNumber(value: number), .plain)
         case .double(let number):
             try spend(24)
-            return jsonNumber(number)
+            return (Self.jsonNumber(number), .plain)
         case .bool(let flag):
             try spend(5)
-            return NSNumber(value: flag)
-        case .url, .body:
-            try spend(marker.utf8.count + 2)
-            return marker
+            return (NSNumber(value: flag), .plain)
+        case .url(let url):
+            let text = self.url(url)
+            try spend(max(text.utf8.count, Self.marker.utf8.count) + 2)
+            return (text, .redacted(text))
+        case .body(let data, let contentType):
+            let text = redactor.redact(body: data, contentType: contentType)
+            try spend(max(text.utf8.count, Self.marker.utf8.count) + 2)
+            return (text, .redacted(text))
         case .null:
             try spend(4)
-            return NSNull()
+            return (NSNull(), .plain)
         case .array(let elements):
-            guard depth <= maximumDepth else { throw .tooDeep }
+            guard depth <= Self.maximumDepth else { throw .tooDeep }
             try spend(2)
             var array: [Any] = []
+            var shapes: [Shape] = []
             array.reserveCapacity(elements.count)
+            shapes.reserveCapacity(elements.count)
             for element in elements {
                 try spend(1)
-                array.append(try jsonObject(element, depth: depth + 1, budget: &budget))
+                let (json, shape) = try jsonObject(element, depth: depth + 1, budget: &budget)
+                array.append(json)
+                shapes.append(shape)
             }
-            return array
+            return (array, .array(shapes))
         case .dictionary(let members):
-            guard depth <= maximumDepth else { throw .tooDeep }
+            guard depth <= Self.maximumDepth else { throw .tooDeep }
             try spend(2)
             var object: [String: Any] = [:]
+            var shapes: [String: Shape] = [:]
             for (key, member) in members {
                 try spend(key.utf8.count + 4)
-                object[key] = try jsonObject(member, depth: depth + 1, budget: &budget)
+                (object[key], shapes[key]) = try jsonObject(member, depth: depth + 1, budget: &budget)
             }
-            return object
+            return (object, .object(shapes))
         }
     }
 
@@ -145,29 +204,49 @@ struct RecordRedactor: Sendable {
 
     // MARK: - Decoding
 
-    /// The redacted value for one parsed JSON value, with the URL or body that `input` holds in
-    /// place of an unchanged marker. `input` is nil where the output no longer lines up with it.
-    func restore(_ value: Any, input: LogValue?) -> RedactedValue {
+    /// The JSON with the marker word in place of each URL and body text.
+    static func marked(_ json: Any, shape: Shape) -> Any {
+        switch shape {
+        case .plain: return json
+        case .redacted: return marker
+        case .array(let shapes):
+            guard let array = json as? [Any] else { return json }
+            return zip(array, shapes).map { marked($0, shape: $1) }
+        case .object(let shapes):
+            guard let object = json as? [String: Any] else { return json }
+            return object.reduce(into: [String: Any]()) { result, member in
+                result[member.key] = shapes[member.key].map { marked(member.value, shape: $0) } ?? member.value
+            }
+        }
+    }
+
+    /// The redacted value for one parsed JSON value: the first pass's value, except where `shape`
+    /// says the input held a URL or body. That one is written as its own parser wrote it when
+    /// the marker pass kept the marker, and hidden otherwise. `shape` is nil where the output no
+    /// longer lines up with the input (a key the redactor rewrote); the first pass's text is
+    /// kept there, which is the URL or body text redacted once more as free text.
+    static func restore(_ value: Any, marked: Any?, shape: Shape?) -> RedactedValue {
+        if case .redacted(let written) = shape {
+            return .string(marked as? String == Self.marker ? written : SensitiveDataRedactor.replacement)
+        }
         switch value {
         case let text as String:
-            guard text == Self.marker else { return .string(text) }
-            switch input {
-            case .url(let url): return .string(self.url(url))
-            case .body(let data, let contentType): return .string(redactor.redact(body: data, contentType: contentType))
-            default: return .string(SensitiveDataRedactor.replacement)
-            }
+            return .string(text)
         case let number as NSNumber:
-            return Self.restore(number)
+            return restore(number)
         case let array as [Any]:
-            var elements: [LogValue]? = nil
-            if case .array(let given) = input, given.count == array.count { elements = given }
-            return .array(array.enumerated().map { restore($0.element, input: elements?[$0.offset]) })
+            var shapes: [Shape]? = nil
+            var markedElements: [Any]? = nil
+            if case .array(let given) = shape, given.count == array.count { shapes = given }
+            if let given = marked as? [Any], given.count == array.count { markedElements = given }
+            return .array(array.enumerated().map { restore($0.element, marked: markedElements?[$0.offset], shape: shapes?[$0.offset]) })
         case let object as [String: Any]:
-            var members: [String: LogValue]? = nil
-            if case .dictionary(let given) = input { members = given }
+            var shapes: [String: Shape]? = nil
+            if case .object(let given) = shape { shapes = given }
+            let markedMembers = marked as? [String: Any]
             var restored: [String: RedactedValue] = [:]
             for (key, member) in object {
-                restored[key] = restore(member, input: members?[key])
+                restored[key] = restore(member, marked: markedMembers?[key], shape: shapes?[key])
             }
             return .object(restored)
         default:
