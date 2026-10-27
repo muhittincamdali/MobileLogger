@@ -11,11 +11,13 @@ let package = Package(
         .visionOS(.v2)
     ],
     products: [
-        .library(name: "MobileLogger", targets: ["MobileLogger"])
+        .library(name: "MobileLogger", targets: ["MobileLogger"]),
+        .library(name: "MobileLoggerSwiftLog", targets: ["MobileLoggerSwiftLog"])
     ],
     dependencies: [
         // The redactor of the shared redaction spec (REDACTION-SPEC 2.1, implementation "S").
-        .package(url: "https://github.com/muhittincamdali/iOSSecurityTools.git", from: "2.1.2")
+        .package(url: "https://github.com/muhittincamdali/iOSSecurityTools.git", from: "2.1.2"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.16.0")
     ],
     targets: [
         .target(
@@ -25,6 +27,14 @@ let package = Package(
             ],
             path: "Sources/MobileLogger"
         ),
+        .target(
+            name: "MobileLoggerSwiftLog",
+            dependencies: [
+                "MobileLogger",
+                .product(name: "Logging", package: "swift-log")
+            ],
+            path: "Sources/MobileLoggerSwiftLog"
+        ),
         .testTarget(
             name: "MobileLoggerTests",
             dependencies: [
@@ -32,6 +42,15 @@ let package = Package(
                 .product(name: "iOSSecurityTools", package: "iOSSecurityTools")
             ],
             path: "Tests/MobileLoggerTests"
+        ),
+        .testTarget(
+            name: "MobileLoggerSwiftLogTests",
+            dependencies: [
+                "MobileLoggerSwiftLog",
+                "MobileLogger",
+                .product(name: "Logging", package: "swift-log")
+            ],
+            path: "Tests/MobileLoggerSwiftLogTests"
         )
     ]
 )
