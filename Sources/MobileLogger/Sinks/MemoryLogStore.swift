@@ -2,9 +2,12 @@ import Synchronization
 
 /// Keeps the most recent records in memory, within a count and a byte budget.
 ///
-/// When either limit is reached the oldest records are dropped, so the store never grows past
-/// its budget however much the app logs. Use it for an in-app log screen or to export the last
-/// few minutes of logs with a bug report:
+/// When either limit is reached the oldest records are dropped, so however much the app logs the
+/// store holds at most ``capacity`` records within ``maximumBytes``. The one exception is the
+/// newest record, which is always kept: when it alone is larger than ``maximumBytes``, it is the
+/// only record held. The message and metadata limits of the ``RedactionPolicy`` bound how large
+/// one record can be. Use the store for an in-app log screen or to export the last few minutes
+/// of logs with a bug report:
 ///
 /// ```swift
 /// let store = MemoryLogStore(capacity: 2_000)
