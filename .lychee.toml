@@ -45,8 +45,9 @@ remap = [
   '^https://github\.com/muhittincamdali/MobileLogger/(?:blob|tree)/main/(.*)$ file:///home/runner/work/MobileLogger/MobileLogger/$1',
   # The article pages on GitHub Pages are built from the .docc articles by docs.yml after a push
   # to main, so a pull request that adds an article links to a page that is not online yet. Each
-  # article URL is checked against its source file instead; the documentation root stays a live
-  # check, so a site that is down still fails.
+  # article URL is checked against its source file instead, and so is the documentation root,
+  # whose first deployment also comes after the merge.
+  '^https://muhittincamdali\.github\.io/MobileLogger/documentation/mobilelogger/?$ file:///home/runner/work/MobileLogger/MobileLogger/Sources/MobileLogger/MobileLogger.docc/MobileLogger.md',
   '^https://muhittincamdali\.github\.io/MobileLogger/documentation/mobilelogger/redactionrules$ file:///home/runner/work/MobileLogger/MobileLogger/Sources/MobileLogger/MobileLogger.docc/RedactionRules.md',
   '^https://muhittincamdali\.github\.io/MobileLogger/documentation/mobilelogger/gettingstarted$ file:///home/runner/work/MobileLogger/MobileLogger/Sources/MobileLogger/MobileLogger.docc/GettingStarted.md',
   '^https://muhittincamdali\.github\.io/MobileLogger/documentation/mobilelogger/exportinglogs$ file:///home/runner/work/MobileLogger/MobileLogger/Sources/MobileLogger/MobileLogger.docc/ExportingLogs.md',
