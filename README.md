@@ -308,7 +308,9 @@ log.info(message, metadata)
   names one to its neighbours, a neutral marker elsewhere. Only where that word comes back
   unchanged (its key and its neighbours hide nothing) is the URL or body text kept; anywhere
   else the value stays hidden. A pair of bodies whose first reads `password` therefore hides the
-  second, as a pair of strings would.
+  second, as a pair of strings would. A URL or body is also read as it was given, so a name its
+  parser rewrites (the relative URL `password`, written as `<unparsed URL>`) still hides what is
+  beside it.
 - Every limit fails closed: past it, the logger hides or drops more, never less, and counts what
   it drops.
 - Tests use Swift Testing and run on macOS and an iPhone simulator: the spec's required set and

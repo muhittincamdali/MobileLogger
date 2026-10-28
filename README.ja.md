@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md@38e5797342414cc5d17bf60a55cbbb922bd32ae1 status=reviewed -->
+<!-- i18n-source: README.md@d9de57463180a0f24deae8e38d6a6e79f81f6be3 status=reviewed -->
 <!-- brand:start -->
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg"><img src="https://raw.githubusercontent.com/muhittincamdali/MobileLogger/main/.github/brand/banner-light.svg" alt="MobileLogger: Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."></picture></p>
@@ -257,7 +257,7 @@ log.info(message, metadata)
 
 - `Sources/MobileLogger` には、ロガー、レコード型、sink（`Sinks/`）、エクスポート（`Export/`）が入っています。`Sources/MobileLoggerSwiftLog` には swift-log のハンドラが入っています。swift-log を使わないアプリがリンクしないよう、別のプロダクトになっています。
 - マスキングは、どの sink が呼ばれるよりも前に、ログを記録したスレッドで 1 回だけ行われます。sink が目にするのは `LogRecord` の値だけなので、新しい sink がマスカーの隠した内容を漏らすことはありません。
-- URL とボディは、まずそれぞれのパーサーでマスクされます。次に metadata の JSON を、その位置にマスク後のテキストを置いて読みます。これにより URL やボディも、ほかの文字列と同じように隣接する値を隠します。さらにもう一度、その位置に代わりの単語を置いて読みます。テキストが隣接する値に対して秘密を名指す場合は秘密を名指す単語、そうでない場合は中立の目印です。その単語が変更されずに戻ってきた場合（そのキーと隣接する値が何も隠していない場合）にだけ、URL やボディのテキストが残ります。それ以外の場所では、値は隠されたままです。そのため、最初のボディが `password` と読める 2 つのボディの組は、2 つの文字列の組と同じように 2 番目を隠します。
+- URL とボディは、まずそれぞれのパーサーでマスクされます。次に metadata の JSON を、その位置にマスク後のテキストを置いて読みます。これにより URL やボディも、ほかの文字列と同じように隣接する値を隠します。さらにもう一度、その位置に代わりの単語を置いて読みます。テキストが隣接する値に対して秘密を名指す場合は秘密を名指す単語、そうでない場合は中立の目印です。その単語が変更されずに戻ってきた場合（そのキーと隣接する値が何も隠していない場合）にだけ、URL やボディのテキストが残ります。それ以外の場所では、値は隠されたままです。そのため、最初のボディが `password` と読める 2 つのボディの組は、2 つの文字列の組と同じように 2 番目を隠します。URL やボディは渡されたままの形でも読まれるため、パーサーが書き換える名前（`<unparsed URL>` と書かれる相対 URL `password`）も、隣の値を隠します。
 - すべての上限は fail-closed です。上限を超えると、ロガーはより多くを隠すか破棄し、少なくなることは決してありません。また、破棄した件数も数えます。
 - テストは Swift Testing を使い、macOS と iPhone シミュレータで実行されます。対象は、仕様の必須セットとコーパス、metadata のパイプライン、ストア、エクスポート、swift-log ブリッジ、README のサンプル、そして `OSLogStore` を使った unified logging の往復です。
 
