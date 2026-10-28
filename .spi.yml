@@ -1,0 +1,13 @@
+version: 1
+builder:
+  configs:
+    - platform: ios
+      scheme: MobileLogger
+      documentation_targets: [MobileLogger]
+    - platform: macos-spm
+    - platform: tvos
+      scheme: MobileLogger
+    - platform: watchos
+      scheme: MobileLogger
+    - platform: visionos
+      scheme: MobileLogger

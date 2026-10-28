@@ -1,0 +1,1 @@
+../../Examples/LogExplorer/LogExplorer/ReadmeSamples.swift

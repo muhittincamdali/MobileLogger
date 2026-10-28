@@ -1,0 +1,45 @@
+# XcodeGen spec for LogExplorer.xcodeproj. The project file is committed, so XcodeGen is only
+# needed after changing this file: run `xcodegen` in this folder.
+name: LogExplorer
+options:
+  bundleIdPrefix: io.github.muhittincamdali
+  deploymentTarget:
+    iOS: "18.0"
+    macOS: "15.0"
+packages:
+  MobileLogger:
+    path: ../..
+targets:
+  LogExplorer:
+    type: application
+    supportedDestinations: [iOS, macOS]
+    sources: [LogExplorer]
+    dependencies:
+      - package: MobileLogger
+        product: MobileLogger
+      - package: MobileLogger
+        product: MobileLoggerSwiftLog
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        MARKETING_VERSION: "2.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Log Explorer
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        # Sign to run locally on the Mac; the simulator needs no signing.
+        "CODE_SIGN_IDENTITY[sdk=macosx*]": "-"
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        ENABLE_APP_SANDBOX: YES
+schemes:
+  LogExplorer:
+    build:
+      targets:
+        LogExplorer: all
+    run:
+      config: Debug

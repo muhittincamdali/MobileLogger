@@ -1,0 +1,43 @@
+{
+  "name": "MobileLogger",
+  "repository": "muhittincamdali/MobileLogger",
+  "tagline": {
+    "en": "Logging for Apple apps that hides secrets before anything is written, then keeps and exports the logs."
+  },
+  "tags": {
+    "en": [
+      "Swift 6",
+      "iOS · macOS",
+      "Redaction spec",
+      "swift-log"
+    ]
+  },
+  "motif": "code",
+  "buttons": [
+    "start",
+    "docs",
+    "examples"
+  ],
+  "links": {
+    "docs": "https://muhittincamdali.github.io/MobileLogger/documentation/mobilelogger/",
+    "examples": "Examples/"
+  },
+  "languages": [
+    "en",
+    "tr",
+    "zh-CN",
+    "ja",
+    "ko",
+    "es",
+    "de",
+    "fr",
+    "pt-BR",
+    "ru"
+  ],
+  "docc": {
+    "targets": [
+      "MobileLogger"
+    ]
+  },
+  "socialTheme": "dark"
+}
