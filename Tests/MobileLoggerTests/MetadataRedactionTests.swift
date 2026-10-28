@@ -91,13 +91,13 @@ struct MetadataRedactionTests {
     }
 
     @Test("Every way of naming a secret hides a body or URL beside it as it hides a string", arguments: heldNameShapes)
-    func heldNameShapesHideBodiesAndURLs(shape: HeldNameShape) {
+    func heldNameShapesHideBodiesAndURLs(shape: HeldNameShape) throws {
         // The plain string form is the reference: the shape must hide a string value.
-        let reference = encoded(record(metadata: shape.build(.string("password"), .string("hunter2"))).metadata)
+        let reference = try encoded(record(metadata: shape.build(.string("password"), .string("hunter2"))).metadata)
         #expect(!reference.contains("hunter2"), "\(shape.name): the reference form leaks")
         for (nameForm, name) in heldNames {
             for (valueForm, value) in secretValues {
-                let text = encoded(record(metadata: shape.build(name, value)).metadata)
+                let text = try encoded(record(metadata: shape.build(name, value)).metadata)
                 #expect(!text.contains("hunter2"), "\(shape.name), \(nameForm) name, \(valueForm) value: \(text)")
             }
         }
@@ -257,9 +257,10 @@ let secretValues: [(String, LogValue)] = [
     ("URL", .url(URL(string: "https://x.test/hunter2")!)),
 ]
 
-/// Redacted metadata as JSON text, to search for a secret anywhere in it.
-func encoded(_ metadata: [String: RedactedValue]) -> String {
+/// Redacted metadata as JSON text, to search for a secret anywhere in it. Fails the test when the
+/// metadata cannot be encoded, so a search in it never passes on an empty text.
+func encoded(_ metadata: [String: RedactedValue]) throws -> String {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-    return (try? encoder.encode(metadata)).map { String(decoding: $0, as: UTF8.self) } ?? ""
+    return try #require(String(data: encoder.encode(metadata), encoding: .utf8))
 }
