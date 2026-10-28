@@ -103,6 +103,36 @@ struct MetadataRedactionTests {
         }
     }
 
+    @Test("A name its parser rewrites hides a body or URL beside it where the name as a string does", arguments: rewrittenNames)
+    func rewrittenNamesHideBodiesAndURLs(name: RewrittenName) throws {
+        // The plain string form is the reference: the name as a string must hide a string value.
+        let reference = try encoded(record(metadata: name.shape.build(.string(name.text), .string("hunter2"))).metadata)
+        #expect(!reference.contains("hunter2"), "the reference form leaks")
+        let forms: [(String, LogValue)] = [
+            ("text body", .body(Data(name.text.utf8), contentType: "text/plain")),
+            ("relative URL", .url(try #require(URL(string: name.text)))),
+        ]
+        for (nameForm, written) in forms {
+            for (valueForm, value) in [("string", "hunter2")] + secretValues {
+                let text = try encoded(record(metadata: name.shape.build(written, value)).metadata)
+                #expect(!text.contains("hunter2"), "\(nameForm) name, \(valueForm) value: \(text)")
+            }
+        }
+    }
+
+    @Test("A URL or body whose parser rewrites a held name keeps its written text and hides its neighbours")
+    func rewrittenNameKeepsItsText() throws {
+        let link = LogValue.url(try #require(URL(string: "password")))
+        let written = try #require(redactedURL("password"))
+        let list = record(metadata: ["l": [link, "hunter2", "z"]]).metadata
+        #expect(list["l"] == .array([.string(written), .string(replacement), .string(replacement)]))
+
+        let card = LogValue.body(Data("%card".utf8), contentType: "text/plain")
+        let cardText = try #require(redactedBody("%card", contentType: "text/plain"))
+        let parameter = record(metadata: ["ParameterKey": card, "ParameterValue": "hunter2"]).metadata
+        #expect(parameter == ["ParameterKey": .string(cardText), "ParameterValue": .string(replacement)])
+    }
+
     @Test("A string that equals the internal marker or a body's text stays the string it is")
     func markerAsString() {
         let values = record(metadata: [
@@ -256,6 +286,26 @@ let secretValues: [(String, LogValue)] = [
     ("form body", .body(Data("note=hunter2".utf8), contentType: "application/x-www-form-urlencoded")),
     ("URL", .url(URL(string: "https://x.test/hunter2")!)),
 ]
+
+/// A name that names a secret as a string in `shape` and that a URL or body parser writes as a
+/// text that does not: `<unparsed URL>`, `[redacted]` or a percent escape.
+struct RewrittenName: Sendable, CustomTestStringConvertible {
+    let text: String
+    let shape: HeldNameShape
+
+    var testDescription: String { "\(shape.name), \(text.debugDescription)" }
+}
+
+let rewrittenNames: [RewrittenName] = {
+    let lists = [
+        HeldNameShape(name: "list of three") { name, value in ["l": [name, value, "z"]] },
+        HeldNameShape(name: "list of five") { name, value in ["l": ["a", name, value, "b", "c"]] },
+    ]
+    let parameterKey = HeldNameShape(name: "ParameterKey") { name, value in ["ParameterKey": name, "ParameterValue": value] }
+    // A control character names a secret where a member names a field, not in a list.
+    return lists.flatMap { shape in ["password", "%card"].map { RewrittenName(text: $0, shape: shape) } }
+        + ["password", "%card", "\n"].map { RewrittenName(text: $0, shape: parameterKey) }
+}()
 
 /// Redacted metadata as JSON text, to search for a secret anywhere in it. Fails the test when the
 /// metadata cannot be encoded, so a search in it never passes on an empty text.

@@ -61,6 +61,12 @@ removed; nothing of it is kept.
   `["label": .body("password"), "value": .url(…)]` hide the value. The second metadata pass puts
   a word that names a secret in place of each URL or body whose text names one, so it sees the
   same names as the first.
+- A name that a URL or body parser rewrites still hides its neighbours where the same name as a
+  string does: `["l": [.url(URL(string: "password")!), "hunter2", "z"]]` (written as
+  `<unparsed URL>`) and `["ParameterKey": .body("%card"), "ParameterValue": "hunter2"]`
+  (written as `[redacted]`) hide `hunter2`. The URL or body as it was given, and a URL's
+  percent-decoded text, are read as names too, and both metadata passes put the naming word in
+  its place when they name a secret.
 
 ## [1.0.0] - 2026-02-03
 

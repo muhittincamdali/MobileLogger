@@ -1,7 +1,7 @@
 import Foundation
 import iOSSecurityTools
 
-/// The second JSON pass over metadata that holds URLs and bodies.
+/// The stand-ins that both JSON passes over metadata put in place of URLs and bodies.
 ///
 /// The first pass cannot say whether a URL or body was hidden: its text is read there as free
 /// text, and free text may turn it into `[redacted]` as well (`https://example.com/users/:id`
@@ -12,39 +12,64 @@ import iOSSecurityTools
 /// in this pass. Whether a text names a secret depends only on the text, its key and its place
 /// in a pair or a longer array (REDACTION-SPEC §2 K10–K13), so it is read from a small JSON
 /// object that holds the text and one marker beside it.
+///
+/// A parser may also rewrite a name: the relative URL `password` is written as `<unparsed URL>`
+/// and a body `%card` as `[redacted]`, and neither text names a secret. The URL or body as it
+/// was given is read the same way, and where it names a secret that its text does not, both
+/// passes put the naming word in its place, so its neighbours are hidden as they are beside the
+/// same name given as a string.
 extension RecordRedactor {
-    /// Stands for a URL or body that names a secret to its neighbours in the second JSON pass:
-    /// free text keeps it, and it names a secret as a member of any key and in any array.
+    /// Stands for a URL or body that names a secret to its neighbours: free text keeps it, and it
+    /// names a secret as a member of any key and in any array.
     static let namingWord = "password"
 
-    /// The JSON with a stand-in word in place of each URL and body text: ``namingWord`` where the
-    /// text names a secret to its neighbours, ``marker`` elsewhere.
-    func standIns(_ json: Any, shape: Shape) -> Any {
+    /// The JSON of each pass: for the first, the written text of each URL and body, or
+    /// ``namingWord`` where only the URL or body as given names a secret to its neighbours; for
+    /// the second, ``namingWord`` where the text or the URL or body as given names one, and
+    /// ``marker`` elsewhere.
+    func standIns(_ json: Any, shape: Shape) -> (written: Any, marked: Any) {
         switch shape {
-        case .plain: return json
-        case .redacted: return Self.marker
+        case .plain: return (json, json)
+        case .redacted: return (json, Self.marker)
         case .array(let shapes):
-            guard let array = json as? [Any] else { return json }
-            return zip(array, shapes).enumerated().map { index, element in
-                guard case .redacted(let written) = element.1, array.count > 1 else {
-                    return standIns(element.0, shape: element.1)
+            guard let array = json as? [Any] else { return (json, json) }
+            var written: [Any] = []
+            var marked: [Any] = []
+            for (index, (element, shape)) in zip(array, shapes).enumerated() {
+                let pass: (written: Any, marked: Any) = if case .redacted(let text, let given) = shape, array.count > 1 {
+                    standIn(element, text: text, given: given) { namesSecret($0, at: index, of: array.count) }
+                } else {
+                    standIns(element, shape: shape)
                 }
-                return namesSecret(written, at: index, of: array.count) ? Self.namingWord : Self.marker
+                written.append(pass.written)
+                marked.append(pass.marked)
             }
+            return (written, marked)
         case .object(let shapes):
-            guard let object = json as? [String: Any] else { return json }
-            return object.reduce(into: [String: Any]()) { result, member in
-                guard let shape = shapes[member.key] else {
-                    result[member.key] = member.value
-                    return
+            guard let object = json as? [String: Any] else { return (json, json) }
+            var written: [String: Any] = [:]
+            var marked: [String: Any] = [:]
+            for (key, member) in object {
+                let pass: (written: Any, marked: Any) = if case .redacted(let text, let given) = shapes[key], object.count > 1 {
+                    standIn(member, text: text, given: given) { namesSecret($0, key: key) }
+                } else if let shape = shapes[key] {
+                    standIns(member, shape: shape)
+                } else {
+                    (member, member)
                 }
-                guard case .redacted(let written) = shape, object.count > 1 else {
-                    result[member.key] = standIns(member.value, shape: shape)
-                    return
-                }
-                result[member.key] = namesSecret(written, key: member.key) ? Self.namingWord : Self.marker
+                written[key] = pass.written
+                marked[key] = pass.marked
             }
+            return (written, marked)
         }
+    }
+
+    /// The stand-ins of one URL or body that has neighbours, written as `text` and given as the
+    /// texts in `given`. `names` tells whether a text in its place names a secret to them.
+    private func standIn(_ json: Any, text: String, given: [String], names: (String) -> Bool) -> (written: Any, marked: Any) {
+        if names(text) { return (json, Self.namingWord) }
+        guard given.contains(where: { $0 != text && names($0) }) else { return (json, Self.marker) }
+        return (Self.namingWord, Self.namingWord)
     }
 
     /// Whether `text`, as the member `key` of an object, names a secret to the members beside it.

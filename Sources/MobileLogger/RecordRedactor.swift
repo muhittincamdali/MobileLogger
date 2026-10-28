@@ -10,8 +10,9 @@ import iOSSecurityTools
 /// body in its place, so that text names secrets to its neighbours like any other string and
 /// every other value is taken from this pass; and once with a stand-in word in its place (see
 /// ``standIns(_:shape:)``), a word that names a secret to its neighbours exactly where the text
-/// does. A URL or body is written only where the second pass keeps its word: its key and its
-/// neighbours hide nothing. Anywhere else it is hidden.
+/// does. Where only the URL or body as given names a secret (its parser rewrote the name), both
+/// passes hold that naming word instead. A URL or body is written only where the second pass
+/// keeps its word: its key and its neighbours hide nothing. Anywhere else it is hidden.
 struct RecordRedactor: Sendable {
     /// Stands for a URL or body that names no secret in the second JSON pass. Plain lowercase
     /// ASCII that names no secret, so free text keeps it unless its key or a neighbour hides it.
@@ -54,12 +55,13 @@ struct RecordRedactor: Sendable {
         guard case .object(let shapes) = shape else { return ([:], MetadataFailure.unreadable.note) }
         let texts: [String: Any]
         let marked: [String: Any]
-        switch redactJSON(json) {
+        let passes = shape.holdsURLOrBody ? standIns(json, shape: shape) : (written: json, marked: json)
+        switch redactJSON(passes.written) {
         case .failure(let note): return ([:], note.text)
         case .success(let parsed): texts = parsed
         }
         if shape.holdsURLOrBody {
-            switch redactJSON(standIns(json, shape: shape)) {
+            switch redactJSON(passes.marked) {
             case .failure(let note): return ([:], note.text)
             case .success(let parsed): marked = parsed
             }
@@ -116,11 +118,12 @@ struct RecordRedactor: Sendable {
         }
     }
 
-    /// Where a value held a URL or body, and the text its parser wrote for it, so the output of
-    /// the JSON passes can be lined up with the input.
+    /// Where a value held a URL or body, the text its parser wrote for it and the texts of the URL
+    /// or body as it was given (none when it was too large to read), so the output of the JSON
+    /// passes can be lined up with the input.
     indirect enum Shape {
         case plain
-        case redacted(String)
+        case redacted(String, given: [String])
         case array([Shape])
         case object([String: Shape])
 
@@ -172,15 +175,17 @@ struct RecordRedactor: Sendable {
             try spend(5)
             return (NSNumber(value: flag), .plain)
         case .url(let url):
-            try spendRead(url.absoluteString.utf8.count)
+            let given = url.absoluteString
+            try spendRead(given.utf8.count)
             let text = self.url(url)
             try spend(max(text.utf8.count, Self.marker.utf8.count) + 2)
-            return (text, .redacted(text))
+            return (text, .redacted(text, given: given.utf8.count <= maximumBodySize ? Self.givenTexts(of: given) : []))
         case .body(let data, let contentType):
             try spendRead(data.count)
             let text = redactor.redact(body: data, contentType: contentType)
             try spend(max(text.utf8.count, Self.marker.utf8.count) + 2)
-            return (text, .redacted(text))
+            let given = data.count <= maximumBodySize ? [String(decoding: data, as: UTF8.self)] : []
+            return (text, .redacted(text, given: given))
         case .null:
             try spend(4)
             return (NSNull(), .plain)
@@ -211,6 +216,13 @@ struct RecordRedactor: Sendable {
         }
     }
 
+    /// The texts a URL was given as: its string and, when that holds percent escapes, the string
+    /// they decode to, since `URL(string:)` escapes what it cannot hold (`"\n"` becomes `%0A`).
+    static func givenTexts(of url: String) -> [String] {
+        guard let decoded = url.removingPercentEncoding, decoded != url else { return [url] }
+        return [url, decoded]
+    }
+
     /// A finite number below 10^12 as a JSON number; anything else as a string: `nan`, `inf`,
     /// `-inf`, or the number's digits, so detectors read a card number written as a `Double`.
     static func jsonNumber(_ number: Double) -> Any {
@@ -226,9 +238,10 @@ struct RecordRedactor: Sendable {
     /// says the input held a URL or body. That one is written as its own parser wrote it when
     /// ``keepsWritten(standIn:)`` says so, and hidden otherwise. `shape` is nil where the
     /// output no longer lines up with the input (a key the redactor rewrote); the first pass's
-    /// text is kept there, which is the URL or body text redacted once more as free text.
+    /// text is kept there, which is the URL or body text redacted once more as free text, or
+    /// ``namingWord`` where only the URL or body as given names a secret.
     static func restore(_ value: Any, marked: Any?, shape: Shape?) -> RedactedValue {
-        if case .redacted(let written) = shape {
+        if case .redacted(let written, _) = shape {
             return .string(keepsWritten(standIn: marked) ? written : SensitiveDataRedactor.replacement)
         }
         switch value {
